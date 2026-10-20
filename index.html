@@ -5,7 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>SnapFrame</title>
 <link rel="manifest" href="manifest.json">
-<link rel="apple-touch-icon" href="icon.png">
+<link rel="icon" type="image/png" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
 <meta name="theme-color" content="#111118">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <style>
@@ -16,7 +17,9 @@ header{display:flex;align-items:center;justify-content:space-between;padding:12p
 .logo-img{width:28px;height:28px;border-radius:7px;object-fit:cover;border:1px solid #333}
 header h1{font-size:18px;font-weight:700;letter-spacing:-0.5px}
 header h1 span{color:#8b5cf6}
-#installBtn{background:#8b5cf6;border:none;color:#fff;padding:6px 12px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;display:none;margin-left:auto;margin-right:8px}
+.header-actions{display:flex;gap:8px;align-items:center;margin-left:auto}
+#supportBtn{background:#2a2a38;border:1px solid #3a3a4e;color:#ff6b9d;padding:6px 12px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer}
+#installBtn{background:#8b5cf6;border:none;color:#fff;padding:6px 12px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;display:none}
 #newBtn{background:none;border:1px solid #333;color:#aaa;padding:6px 12px;border-radius:8px;font-size:13px;cursor:pointer;display:none}
 #preview{display:flex;align-items:center;justify-content:center;padding:16px;min-height:0;overflow:hidden}
 #canvas{max-width:100%;max-height:100%;border-radius:8px;box-shadow:0 10px 40px rgba(0,0,0,.5);display:none}
@@ -25,6 +28,22 @@ header h1 span{color:#8b5cf6}
 #dropzone .big{font-size:44px;margin-bottom:10px}
 #dropzone h2{font-size:17px;margin-bottom:6px}
 #dropzone p{color:#aaa;font-size:13px;line-height:1.5}
+.free-line{margin-top:14px;font-size:12px;color:#666}
+.free-line a{color:#8b5cf6;text-decoration:none;font-weight:600}
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.65);display:none;align-items:center;justify-content:center;z-index:1000;padding:20px}
+.modal.open{display:flex}
+.modal-box{background:#1a1a24;border:1px solid #2e2e3e;border-radius:16px;max-width:420px;width:100%;padding:24px;position:relative;max-height:85vh;overflow-y:auto}
+.modal-box h2{font-size:20px;margin-bottom:12px}
+.mission{font-size:14.5px;color:#ddd;line-height:1.65;margin-bottom:16px}
+.modal-box a.donate{display:block;text-align:center;background:#8b5cf6;color:#fff;padding:14px;border-radius:12px;font-weight:700;text-decoration:none;margin-bottom:12px}
+.amt-row{display:flex;gap:8px;justify-content:center;margin-bottom:14px;flex-wrap:wrap}
+.qrwrap{width:max-content;max-width:100%;margin:0 auto 14px;background:#fff;border-radius:12px;padding:12px;text-align:center}
+.qrwrap img{display:block;border-radius:6px}
+.scanhint{font-size:11px;color:#666;margin:6px 0 0!important}
+.copyid{width:100%;background:#2a2a38;border:1px solid #3a3a4e;color:#eee;padding:12px;border-radius:10px;font-size:14px;cursor:pointer;margin-bottom:14px;font-family:inherit}
+.aware{font-size:12.5px!important;color:#888!important;border-top:1px solid #2a2a38;padding-top:12px;margin-bottom:0!important}
+.aware a{color:#a78bfa}
+.closex{position:absolute;top:8px;right:14px;background:none;border:none;color:#888;font-size:24px;cursor:pointer}
 #controls{background:#1a1a24;border-top:1px solid #222;padding:12px 16px calc(12px + env(safe-area-inset-bottom));max-height:46vh;overflow-y:auto;display:none}
 .row{margin-bottom:14px}
 .row label{display:block;font-size:11px;color:#aaa;margin-bottom:6px;text-transform:uppercase;letter-spacing:.6px;font-weight:600}
@@ -40,7 +59,7 @@ input[type=range]{width:100%;accent-color:#8b5cf6}
 .btn{flex:1;padding:14px 8px;border:none;border-radius:12px;font-size:15px;font-weight:600;cursor:pointer}
 .btn.primary{background:#8b5cf6;color:#fff}
 .btn.secondary{background:#2a2a38;color:#eee}
-#toast{position:fixed;top:70px;left:50%;transform:translateX(-50%);background:#8b5cf6;color:#fff;padding:10px 18px;border-radius:10px;font-size:14px;opacity:0;transition:.3s;pointer-events:none;z-index:999}
+#toast{position:fixed;top:70px;left:50%;transform:translateX(-50%);background:#8b5cf6;color:#fff;padding:10px 18px;border-radius:10px;font-size:14px;opacity:0;transition:.3s;pointer-events:none;z-index:1100}
 #toast.show{opacity:1}
 @media(min-width:900px){
  body{grid-template-columns:1fr 340px;grid-template-rows:auto 1fr}
@@ -53,11 +72,14 @@ input[type=range]{width:100%;accent-color:#8b5cf6}
 
 <header>
  <div class="logo-area">
-  <img src="icon.png" class="logo-img" alt="SnapFrame">
+  <img src="icon-192.png" class="logo-img" alt="SnapFrame">
   <h1>Snap<span>Frame</span></h1>
  </div>
- <button id="installBtn">📲 Install App</button>
- <button id="newBtn">+ New</button>
+ <div class="header-actions">
+  <button id="supportBtn">♥ Support</button>
+  <button id="installBtn">📲 Install App</button>
+  <button id="newBtn">+ New</button>
+ </div>
 </header>
 
 <main id="preview">
@@ -65,6 +87,7 @@ input[type=range]{width:100%;accent-color:#8b5cf6}
   <div class="big">📸</div>
   <h2>Tap to pick a screenshot</h2>
   <p>or drag & drop here<br>or press <b>Ctrl+V / ⌘V</b> to paste</p>
+  <p class="free-line">100% free · no ads · <a href="#" id="supportLink">♥ support our mission</a></p>
  </div>
  <canvas id="canvas"></canvas>
  <input type="file" id="fileInput" accept="image/*" hidden>
@@ -75,6 +98,13 @@ input[type=range]{width:100%;accent-color:#8b5cf6}
  <div class="row">
   <label>Add Caption</label>
   <input type="text" id="caption" class="text-input" placeholder="Type title here..." value="">
+ </div>
+ <div class="row"><label>Your Logo (bottom-left)</label>
+  <div class="chips">
+   <label class="chip" id="logoAdd" for="logoInput">+ Add logo</label>
+   <div class="chip" id="logoRemove" style="display:none">✕ Remove</div>
+  </div>
+  <input type="file" id="logoInput" accept="image/*" hidden>
  </div>
  <div class="row"><label>Frame</label>
   <div class="chips" id="frames">
@@ -102,30 +132,85 @@ input[type=range]{width:100%;accent-color:#8b5cf6}
  </div>
 </section>
 
+<div class="modal" id="supportModal">
+ <div class="modal-box">
+  <button class="closex" id="closeModal">×</button>
+  <h2>♥ Support SnapFrame</h2>
+  <p class="mission">I'm teaching myself to build free tools. SnapFrame is the first — 100% free, no ads, no locked features. Donations go toward keeping my tools free and supporting schizophrenia awareness — a condition 1 in 300 people live with, and one of the most misunderstood illnesses on Earth.</p>
+  <div class="amt-row">
+   <button class="chip amt" data-v="29">₹29</button>
+   <button class="chip amt" data-v="99">₹99</button>
+   <button class="chip amt" data-v="199">₹199</button>
+   <button class="chip amt" data-v="0">Choose in app</button>
+  </div>
+  <a class="donate" id="upiPayBtn" href="#">📲 Pay with any UPI app</a>
+  <div class="qrwrap" id="qrwrap">
+   <img id="upiQr" alt="UPI QR code" width="200" height="200">
+   <p class="scanhint">Scan with GPay / PhonePe / Paytm</p>
+  </div>
+  <button class="copyid" id="copyUpi">⧉ Copy UPI ID</button>
+  <p class="aware">💜 Around 1 in 300 people worldwide live with schizophrenia. With treatment and support, people live full, productive lives — misunderstanding is the real barrier. <a href="https://www.who.int/news-room/fact-sheets/detail/schizophrenia" target="_blank" rel="noopener">Learn the facts (WHO)</a></p>
+ </div>
+</div>
+
 <div id="toast"></div>
 
 <script>
+/* ============ EDIT THESE TWO LINES ONLY ============ */
+const UPI_ID='puneetfsn@ybl';
+const UPI_NAME='Puneet';   /* name shown to the person paying */
+/* =================================================== */
+
 const GRADIENTS=[['#667eea','#764ba2'],['#f093fb','#f5576c'],['#4facfe','#00f2fe'],['#43e97b','#38f9d7'],['#fa709a','#fee140'],['#30cfd0','#330867'],['#a8edea','#fed6e3'],['#ff9a9e','#fecfef'],['#0f0c29','#302b63'],['#ff6a00','#ee0979'],['#1e3c72','#2a5298'],['#f5f7fa','#c3cfe2'],['#ffffff','#ffffff'],['#000000','#000000']];
-const state={img:null,grad:0,pad:60,radius:20,shadow:40,ratio:'auto',frame:'none',caption:''};
+const DEFAULTS={grad:0,pad:60,radius:20,shadow:40,ratio:'auto',frame:'none',caption:''};
+const state={...DEFAULTS,img:null,logo:null};
+try{Object.assign(state,JSON.parse(localStorage.getItem('snapframe-settings')||'{}'));}catch(e){}
 const $=id=>document.getElementById(id);
 const canvas=$('canvas'),ctx=canvas.getContext('2d');
 const dropzone=$('dropzone'),fileInput=$('fileInput');
 
-let deferredPrompt;
-window.addEventListener('beforeinstallprompt', (e)=>{
- e.preventDefault(); deferredPrompt=e; $('installBtn').style.display='inline-block';
-});
-$('installBtn')?.addEventListener('click', async ()=>{
- if(deferredPrompt){ deferredPrompt.prompt(); const {outcome}=await deferredPrompt.userChoice; if(outcome==='accepted')$('installBtn').style.display='none'; deferredPrompt=null;}
-});
+function save(){try{const{img,logo,...rest}=state;localStorage.setItem('snapframe-settings',JSON.stringify(rest));}catch(e){}}
 
+/* ---------- Support modal + UPI ---------- */
+const modal=$('supportModal');
+let amount=0,upiReady=false;
+const isMobile=/Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+function upiLink(){
+ return 'upi://pay?pa='+UPI_ID+'&pn='+encodeURIComponent(UPI_NAME)+'&cu=INR'
+  +(amount?('&am='+amount):'')
+  +'&tn='+encodeURIComponent('SnapFrame donation');
+}
+function refreshUpi(){
+ $('upiPayBtn').href=upiLink();
+ $('upiQr').src='https://api.qrserver.com/v1/create-qr-code/?size=200x200&margin=8&data='+encodeURIComponent(upiLink());
+}
+if(!isMobile){$('upiPayBtn').style.display='none';} /* desktop: QR + copy instead */
+$('upiQr').onerror=()=>{$('upiQr').onerror=()=>{$('qrwrap').style.display='none';};$('upiQr').src='upi-qr.png';};
+document.querySelectorAll('.amt').forEach(b=>b.onclick=()=>{
+ document.querySelectorAll('.amt').forEach(x=>x.classList.remove('active'));
+ b.classList.add('active');amount=+b.dataset.v;refreshUpi();
+});
+function openModal(){modal.classList.add('open');if(!upiReady){upiReady=true;refreshUpi();}}
+$('supportBtn').onclick=openModal;
+$('supportLink').onclick=e=>{e.preventDefault();e.stopPropagation();openModal();};
+$('closeModal').onclick=()=>modal.classList.remove('open');
+modal.addEventListener('click',e=>{if(e.target===modal)modal.classList.remove('open');});
+document.addEventListener('keydown',e=>{if(e.key==='Escape')modal.classList.remove('open');});
+$('copyUpi').onclick=async()=>{try{await navigator.clipboard.writeText(UPI_ID);toast('UPI ID copied ✓');}catch(e){toast(UPI_ID);}};
+
+/* ---------- Install button ---------- */
+let deferredPrompt;
+window.addEventListener('beforeinstallprompt',(e)=>{e.preventDefault();deferredPrompt=e;$('installBtn').style.display='inline-block';});
+$('installBtn')?.addEventListener('click',async()=>{if(deferredPrompt){deferredPrompt.prompt();const{outcome}=await deferredPrompt.userChoice;if(outcome==='accepted')$('installBtn').style.display='none';deferredPrompt=null;}});
+
+/* ---------- Load image ---------- */
 function loadFile(file){
  if(!file||!file.type.startsWith('image/'))return;
- const url=URL.createObjectURL(file); const img=new Image();
- img.onload=()=>{state.img=img;URL.revokeObjectURL(url);showEditor();render();}; img.src=url;
+ const url=URL.createObjectURL(file);const img=new Image();
+ img.onload=()=>{state.img=img;URL.revokeObjectURL(url);showEditor();render();};img.src=url;
 }
 function showEditor(){dropzone.style.display='none';canvas.style.display='block';$('controls').style.display='block';$('newBtn').style.display='inline-block';}
-function reset(){state.img=null;fileInput.value='';$('caption').value='';state.caption='';dropzone.style.display='block';canvas.style.display='none';$('controls').style.display='none';$('newBtn').style.display='none';}
+function reset(){state.img=null;fileInput.value='';state.caption='';$('caption').value='';save();dropzone.style.display='block';canvas.style.display='none';$('controls').style.display='none';$('newBtn').style.display='none';}
 
 dropzone.addEventListener('click',()=>fileInput.click());
 fileInput.addEventListener('change',e=>loadFile(e.target.files[0]));
@@ -133,69 +218,118 @@ $('newBtn').addEventListener('click',reset);
 ['dragenter','dragover'].forEach(ev=>document.addEventListener(ev,e=>{e.preventDefault();dropzone.classList.add('over');}));
 ['dragleave','drop'].forEach(ev=>document.addEventListener(ev,e=>{e.preventDefault();dropzone.classList.remove('over');}));
 document.addEventListener('drop',e=>loadFile(e.dataTransfer.files[0]));
-document.addEventListener('paste',e=>{ for(const item of e.clipboardData.items){if(item.type.startsWith('image/')){loadFile(item.getAsFile());break;}}});
-$('caption').addEventListener('input',e=>{state.caption=e.target.value;render();});
+document.addEventListener('paste',e=>{for(const item of e.clipboardData.items){if(item.type.startsWith('image/')){loadFile(item.getAsFile());break;}}});
+$('caption').addEventListener('input',e=>{state.caption=e.target.value;render();save();});
 
+/* ---------- Logo upload ---------- */
+$('logoInput').addEventListener('change',e=>{
+ const f=e.target.files[0];if(!f)return;
+ const url=URL.createObjectURL(f);const im=new Image();
+ im.onload=()=>{state.logo=im;URL.revokeObjectURL(url);$('logoRemove').style.display='inline-block';$('logoAdd').textContent='Change logo';saveLogo(im);render();};
+ im.src=url;
+});
+$('logoRemove').onclick=()=>{state.logo=null;localStorage.removeItem('snapframe-logo');$('logoRemove').style.display='none';$('logoAdd').textContent='+ Add logo';render();};
+function saveLogo(im){
+ const c=document.createElement('canvas');const s=Math.min(1,256/Math.max(im.naturalWidth,im.naturalHeight));
+ c.width=Math.max(1,Math.round(im.naturalWidth*s));c.height=Math.max(1,Math.round(im.naturalHeight*s));
+ c.getContext('2d').drawImage(im,0,0,c.width,c.height);
+ try{localStorage.setItem('snapframe-logo',c.toDataURL('image/png'));}catch(e){}
+}
+const savedLogo=localStorage.getItem('snapframe-logo');
+if(savedLogo){const im=new Image();im.onload=()=>{state.logo=im;$('logoRemove').style.display='inline-block';$('logoAdd').textContent='Change logo';render();};im.src=savedLogo;}
+
+/* ---------- Controls ---------- */
 const sw=$('swatches');
-GRADIENTS.forEach((g,i)=>{ const d=document.createElement('div');d.className='swatch'+(i===0?' active':''); d.style.background=`linear-gradient(135deg,${g[0]},${g[1]})`; d.onclick=()=>{sw.querySelectorAll('.swatch').forEach(x=>x.classList.remove('active'));d.classList.add('active');state.grad=i;render();}; sw.appendChild(d);});
-
-function chipGroup(id,key){ const el=$(id); el.addEventListener('click',e=>{const c=e.target.closest('.chip');if(!c)return; el.querySelectorAll('.chip').forEach(x=>x.classList.remove('active'));c.classList.add('active');state[key]=c.dataset.v;render();});}
+GRADIENTS.forEach((g,i)=>{
+ const d=document.createElement('div');d.className='swatch'+(i===state.grad?' active':'');
+ d.style.background=`linear-gradient(135deg,${g[0]},${g[1]})`;
+ d.onclick=()=>{sw.querySelectorAll('.swatch').forEach(x=>x.classList.remove('active'));d.classList.add('active');state.grad=i;render();save();};
+ sw.appendChild(d);
+});
+function chipGroup(id,key){
+ const el=$(id);
+ el.querySelectorAll('.chip').forEach(c=>c.classList.toggle('active',c.dataset.v===String(state[key])));
+ el.addEventListener('click',e=>{const c=e.target.closest('.chip');if(!c)return;el.querySelectorAll('.chip').forEach(x=>x.classList.remove('active'));c.classList.add('active');state[key]=c.dataset.v;render();save();});
+}
 chipGroup('frames','frame');chipGroup('ratios','ratio');
+['pad','radius','shadow'].forEach(id=>{
+ const el=$(id);el.value=state[id];
+ const up=()=>{state[id]=+el.value;$(id+'V').textContent=el.value;render();save();};
+ el.addEventListener('input',up);up();
+});
+$('caption').value=state.caption||'';
 
-['pad','radius','shadow'].forEach(id=>{ const el=$(id); const up=()=>{state[id]=+el.value; $(id+'V').textContent=el.value; render();}; el.addEventListener('input',up); up();});
-
-function roundRect(c,x,y,w,h,r){ r=Math.min(r,w/2,h/2); c.beginPath(); c.moveTo(x+r,y); c.arcTo(x+w,y,x+w,y+h,r); c.arcTo(x+w,y+h,x,y+h,r); c.arcTo(x,y+h,x,y,r); c.arcTo(x,y,x+w,y,r); c.closePath();}
+/* ---------- Drawing engine ---------- */
+function roundRect(c,x,y,w,h,r){r=Math.min(r,w/2,h/2);c.beginPath();c.moveTo(x+r,y);c.arcTo(x+w,y,x+w,y+h,r);c.arcTo(x+w,y+h,x,y+h,r);c.arcTo(x,y+h,x,y,r);c.arcTo(x,y,x+w,y,r);c.closePath();}
 function render(){
- const img=state.img; if(!img) return;
- let iw=img.naturalWidth, ih=img.naturalHeight;
- const f=Math.min(1,1800/Math.max(iw,ih)); iw=Math.round(iw*f); ih=Math.round(ih*f);
+ const img=state.img;if(!img)return;
+ let iw=img.naturalWidth,ih=img.naturalHeight;
+ const f=Math.min(1,1800/Math.max(iw,ih));iw=Math.round(iw*f);ih=Math.round(ih*f);
  const k=Math.max(iw,ih)/1000;
- const pad=state.pad*k, radius=state.radius*k, blur=state.shadow*k;
+ const pad=state.pad*k,radius=state.radius*k,blur=state.shadow*k;
  const borderW=state.frame==='phone'?Math.round(iw*0.04):0;
  const barH=state.frame==='mac'?Math.round(Math.max(28,iw*0.045)):0;
- const cardW=iw+(borderW*2), cardH=ih+barH+(borderW*2);
+ const cardW=iw+(borderW*2),cardH=ih+barH+(borderW*2);
  const textOffset=state.caption?Math.round(110*k):0;
- let outW=cardW+pad*2, outH=cardH+pad*2+textOffset;
- if(state.ratio!=='auto'){ const r=parseFloat(state.ratio); if(outW/outH>r) outH=outW/r; else outW=outH*r; }
- canvas.width=Math.round(outW); canvas.height=Math.round(outH);
+ let outW=cardW+pad*2,outH=cardH+pad*2+textOffset;
+ if(state.ratio!=='auto'){const r=parseFloat(state.ratio);if(outW/outH>r)outH=outW/r;else outW=outH*r;}
+ canvas.width=Math.round(outW);canvas.height=Math.round(outH);
 
  const g=GRADIENTS[state.grad];
- const grad=ctx.createLinearGradient(0,0,outW,outH); grad.addColorStop(0,g[0]); grad.addColorStop(1,g[1]);
- ctx.fillStyle=grad; ctx.fillRect(0,0,outW,outH);
+ const grad=ctx.createLinearGradient(0,0,outW,outH);grad.addColorStop(0,g[0]);grad.addColorStop(1,g[1]);
+ ctx.fillStyle=grad;ctx.fillRect(0,0,outW,outH);
 
  if(state.caption){
-  ctx.fillStyle='#ffffff'; ctx.font=`bold ${Math.round(42*k)}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`; ctx.textAlign='center';
-  ctx.fillText(state.caption, outW/2, pad+Math.round(45*k));
+  ctx.fillStyle='#ffffff';ctx.font=`bold ${Math.round(42*k)}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`;ctx.textAlign='center';
+  ctx.fillText(state.caption,outW/2,pad+Math.round(45*k));
  }
 
- const x=(outW-cardW)/2, y=((outH-textOffset-cardH)/2)+textOffset;
- if(blur>0){ ctx.save(); ctx.shadowColor='rgba(0,0,0,.45)'; ctx.shadowBlur=blur; ctx.shadowOffsetY=blur*.4; ctx.fillStyle='#000'; roundRect(ctx,x,y,cardW,cardH,state.frame==='phone'?radius*1.5:radius); ctx.fill(); ctx.restore(); }
+ const x=(outW-cardW)/2,y=((outH-textOffset-cardH)/2)+textOffset;
+ if(blur>0){ctx.save();ctx.shadowColor='rgba(0,0,0,.45)';ctx.shadowBlur=blur;ctx.shadowOffsetY=blur*.4;ctx.fillStyle='#000';roundRect(ctx,x,y,cardW,cardH,state.frame==='phone'?radius*1.5:radius);ctx.fill();ctx.restore();}
 
  ctx.save();
  if(state.frame==='phone'){
-  roundRect(ctx,x,y,cardW,cardH,radius*1.5); ctx.clip();
-  ctx.fillStyle='#0c0c0e'; ctx.fillRect(x,y,cardW,cardH);
-  const diW=cardW*0.28, diH=cardH*0.03, diX=x+(cardW-diW)/2, diY=y+(cardH*0.02);
-  ctx.fillStyle='#000'; roundRect(ctx,diX,diY,diW,diH,diH/2); ctx.fill();
- } else { roundRect(ctx,x,y,cardW,cardH,radius); ctx.clip(); }
+  roundRect(ctx,x,y,cardW,cardH,radius*1.5);ctx.clip();
+  ctx.fillStyle='#0c0c0e';ctx.fillRect(x,y,cardW,cardH);
+  const diW=cardW*0.28,diH=cardH*0.03,diX=x+(cardW-diW)/2,diY=y+(cardH*0.02);
+  ctx.fillStyle='#000';roundRect(ctx,diX,diY,diW,diH,diH/2);ctx.fill();
+ }else{roundRect(ctx,x,y,cardW,cardH,radius);ctx.clip();}
 
  if(barH){
-  ctx.fillStyle='#ececf1'; ctx.fillRect(x,y,cardW,barH);
-  const r=barH*.17, cy=y+barH/2;
-  ['#ff5f57','#febc2e','#28c840'].forEach((c,i)=>{ ctx.fillStyle=c; ctx.beginPath(); ctx.arc(x+barH*.55+i*r*2.9,cy,r,0,Math.PI*2); ctx.fill(); });
+  ctx.fillStyle='#ececf1';ctx.fillRect(x,y,cardW,barH);
+  const r=barH*.17,cy=y+barH/2;
+  ['#ff5f57','#febc2e','#28c840'].forEach((c,i)=>{ctx.fillStyle=c;ctx.beginPath();ctx.arc(x+barH*.55+i*r*2.9,cy,r,0,Math.PI*2);ctx.fill();});
  }
 
- ctx.drawImage(img, x+borderW, y+barH+borderW, iw, ih);
+ ctx.drawImage(img,x+borderW,y+barH+borderW,iw,ih);
  ctx.restore();
+
+ /* SnapFrame badge (bottom-right) */
+ ctx.save();
+ ctx.font=`600 ${Math.round(26*k)}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`;
+ const label='SnapFrame';
+ const tw=ctx.measureText(label).width;
+ const pw=tw+34*k,ph=44*k,px=outW-24*k-pw,py=outH-24*k-ph;
+ ctx.fillStyle='rgba(0,0,0,.35)';roundRect(ctx,px,py,pw,ph,ph/2);ctx.fill();
+ ctx.fillStyle='#fff';ctx.textAlign='center';ctx.textBaseline='middle';
+ ctx.fillText(label,px+pw/2,py+ph/2+1);
+ ctx.restore();
+
+ /* user logo (bottom-left) */
+ if(state.logo){
+  const lh=64*k,lw=state.logo.naturalWidth/state.logo.naturalHeight*lh;
+  ctx.drawImage(state.logo,24*k,outH-24*k-lh,lw,lh);
+ }
 }
 
-function toast(m){ const t=$('toast'); t.textContent=m; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),1800); }
-function getBlob(){ return new Promise(r=>canvas.toBlob(r,'image/png')); }
-async function downloadCanvas(){ const b=await getBlob(); const a=document.createElement('a'); a.href=URL.createObjectURL(b); a.download='snapframe.png'; document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(a.href),2000); toast('Saved!'); }
-async function shareCanvas(){ const b=await getBlob(); const f=new File([b],'snapframe.png',{type:'image/png'}); if(navigator.canShare&&navigator.canShare({files:[f]})){ try{await navigator.share({files:[f],title:'SnapFrame'});}catch(e){} } else downloadCanvas(); }
-async function copyCanvas(){ try{ const b=await getBlob(); await navigator.clipboard.write([new ClipboardItem({'image/png':b})]); toast('Copied!'); }catch(e){ toast('Use Download'); } }
+/* ---------- Export ---------- */
+function toast(m){const t=$('toast');t.textContent=m;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),1800);}
+function getBlob(){return new Promise(r=>canvas.toBlob(r,'image/png'));}
+async function downloadCanvas(){const b=await getBlob();const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='snapframe.png';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),2000);toast('Saved!');}
+async function shareCanvas(){const b=await getBlob();const f=new File([b],'snapframe.png',{type:'image/png'});if(navigator.canShare&&navigator.canShare({files:[f]})){try{await navigator.share({files:[f],title:'SnapFrame'});}catch(e){}}else downloadCanvas();}
+async function copyCanvas(){try{const b=await getBlob();await navigator.clipboard.write([new ClipboardItem({'image/png':b})]);toast('Copied!');}catch(e){toast('Use Download');}}
 
-if('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(()=>{});
+if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});
 </script>
 </body>
 </html>
