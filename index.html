@@ -22,7 +22,7 @@ header h1 span{color:#8b5cf6}
 #installBtn{background:#8b5cf6;border:none;color:#fff;padding:6px 12px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;display:none}
 #newBtn{background:none;border:1px solid #333;color:#aaa;padding:6px 12px;border-radius:8px;font-size:13px;cursor:pointer;display:none}
 #preview{display:flex;align-items:center;justify-content:center;padding:16px;min-height:0;overflow:hidden}
-#canvas{max-width:100%;max-height:100%;border-radius:8px;box-shadow:0 10px 40px rgba(0,0,0,.5);display:none}
+#canvas{max-width:100%;max-height:100%;border-radius:8px;box-shadow:0 10px 40px rgba(0,0,0,.5);display:none;touch-action:none;-webkit-user-select:none;user-select:none}
 #dropzone{border:2px dashed #444;border-radius:16px;padding:40px 24px;text-align:center;cursor:pointer;max-width:360px;width:100%}
 #dropzone.over{border-color:#8b5cf6;background:rgba(139,92,246,.08)}
 #dropzone .big{font-size:44px;margin-bottom:10px}
@@ -94,10 +94,21 @@ input[type=range]{width:100%;accent-color:#8b5cf6}
 </main>
 
 <section id="controls">
+ <div class="row"><label>One-tap Presets</label><div class="chips" id="presets" style="flex-wrap:nowrap;overflow-x:auto;padding-bottom:4px"></div></div>
  <div class="row"><label>Background</label><div class="swatches" id="swatches"></div></div>
- <div class="row">
-  <label>Add Caption</label>
+ <div class="row"><label>Add Caption</label>
   <input type="text" id="caption" class="text-input" placeholder="Type title here..." value="">
+  <div class="chips" id="capPos" style="margin-top:8px">
+   <div class="chip active" data-v="top">⬆ Top</div>
+   <div class="chip" data-v="bottom">⬇ Bottom</div>
+  </div>
+ </div>
+ <div class="row"><label>Hide Private Info</label>
+  <div class="chips">
+   <div class="chip" id="blurBtn">🔒 Blur mode</div>
+   <div class="chip" id="blurUndo">↺ Undo</div>
+   <div class="chip" id="blurClear">🗑 Clear</div>
+  </div>
  </div>
  <div class="row"><label>Your Logo (bottom-left)</label>
   <div class="chips">
@@ -158,18 +169,26 @@ input[type=range]{width:100%;accent-color:#8b5cf6}
 <script>
 /* ============ EDIT THESE TWO LINES ONLY ============ */
 const UPI_ID='puneetfsn@ybl';
-const UPI_NAME='Puneet';   /* name shown to the person paying */
+const UPI_NAME='Puneet';
 /* =================================================== */
 
 const GRADIENTS=[['#667eea','#764ba2'],['#f093fb','#f5576c'],['#4facfe','#00f2fe'],['#43e97b','#38f9d7'],['#fa709a','#fee140'],['#30cfd0','#330867'],['#a8edea','#fed6e3'],['#ff9a9e','#fecfef'],['#0f0c29','#302b63'],['#ff6a00','#ee0979'],['#1e3c72','#2a5298'],['#f5f7fa','#c3cfe2'],['#ffffff','#ffffff'],['#000000','#000000']];
-const DEFAULTS={grad:0,pad:60,radius:20,shadow:40,ratio:'auto',frame:'none',caption:''};
-const state={...DEFAULTS,img:null,logo:null};
+const PRESETS=[
+ {n:'𝕏 Post',v:{ratio:'1.7778',grad:0,pad:50,radius:24,shadow:45,frame:'none'}},
+ {n:'LinkedIn',v:{ratio:'1.7778',grad:11,pad:50,radius:20,shadow:35,frame:'none'}},
+ {n:'Insta Post',v:{ratio:'0.8',grad:1,pad:70,radius:28,shadow:50,frame:'none'}},
+ {n:'Story/Reel',v:{ratio:'0.5625',grad:8,pad:80,radius:28,shadow:50,frame:'none'}},
+ {n:'App Launch',v:{ratio:'auto',grad:0,pad:90,radius:32,shadow:60,frame:'mac'}},
+ {n:'Chat Clean',v:{ratio:'auto',grad:12,pad:60,radius:24,shadow:25,frame:'phone'}}
+];
+const DEFAULTS={grad:0,pad:60,radius:20,shadow:40,ratio:'auto',frame:'none',caption:'',capPos:'top'};
+const state={...DEFAULTS,img:null,logo:null,blurs:[],blurMode:false};
 try{Object.assign(state,JSON.parse(localStorage.getItem('snapframe-settings')||'{}'));}catch(e){}
 const $=id=>document.getElementById(id);
 const canvas=$('canvas'),ctx=canvas.getContext('2d');
 const dropzone=$('dropzone'),fileInput=$('fileInput');
 
-function save(){try{const{img,logo,...rest}=state;localStorage.setItem('snapframe-settings',JSON.stringify(rest));}catch(e){}}
+function save(){try{const{img,logo,blurs,blurMode,...rest}=state;localStorage.setItem('snapframe-settings',JSON.stringify(rest));}catch(e){}}
 
 /* ---------- Support modal + UPI ---------- */
 const modal=$('supportModal');
@@ -184,7 +203,7 @@ function refreshUpi(){
  $('upiPayBtn').href=upiLink();
  $('upiQr').src='https://api.qrserver.com/v1/create-qr-code/?size=200x200&margin=8&data='+encodeURIComponent(upiLink());
 }
-if(!isMobile){$('upiPayBtn').style.display='none';} /* desktop: QR + copy instead */
+if(!isMobile){$('upiPayBtn').style.display='none';}
 $('upiQr').onerror=()=>{$('upiQr').onerror=()=>{$('qrwrap').style.display='none';};$('upiQr').src='upi-qr.png';};
 document.querySelectorAll('.amt').forEach(b=>b.onclick=()=>{
  document.querySelectorAll('.amt').forEach(x=>x.classList.remove('active'));
@@ -207,10 +226,10 @@ $('installBtn')?.addEventListener('click',async()=>{if(deferredPrompt){deferredP
 function loadFile(file){
  if(!file||!file.type.startsWith('image/'))return;
  const url=URL.createObjectURL(file);const img=new Image();
- img.onload=()=>{state.img=img;URL.revokeObjectURL(url);showEditor();render();};img.src=url;
+ img.onload=()=>{state.img=img;state.blurs=[];dragStart=null;URL.revokeObjectURL(url);showEditor();render();};img.src=url;
 }
 function showEditor(){dropzone.style.display='none';canvas.style.display='block';$('controls').style.display='block';$('newBtn').style.display='inline-block';}
-function reset(){state.img=null;fileInput.value='';state.caption='';$('caption').value='';save();dropzone.style.display='block';canvas.style.display='none';$('controls').style.display='none';$('newBtn').style.display='none';}
+function reset(){state.img=null;state.blurs=[];dragStart=null;fileInput.value='';state.caption='';$('caption').value='';save();dropzone.style.display='block';canvas.style.display='none';$('controls').style.display='none';$('newBtn').style.display='none';}
 
 dropzone.addEventListener('click',()=>fileInput.click());
 fileInput.addEventListener('change',e=>loadFile(e.target.files[0]));
@@ -220,6 +239,37 @@ $('newBtn').addEventListener('click',reset);
 document.addEventListener('drop',e=>loadFile(e.dataTransfer.files[0]));
 document.addEventListener('paste',e=>{for(const item of e.clipboardData.items){if(item.type.startsWith('image/')){loadFile(item.getAsFile());break;}}});
 $('caption').addEventListener('input',e=>{state.caption=e.target.value;render();save();});
+
+/* ---------- Blur / hide info ---------- */
+let L={ix:0,iy:0,iw:1,ih:1},dragStart=null,dragNow=null;
+function toImg(e){
+ const rc=canvas.getBoundingClientRect();
+ const cx=(e.clientX-rc.left)*(canvas.width/rc.width);
+ const cy=(e.clientY-rc.top)*(canvas.height/rc.height);
+ return{x:Math.min(Math.max(cx-L.ix,0),L.iw),y:Math.min(Math.max(cy-L.iy,0),L.ih)};
+}
+function normRect(a,b){const x=Math.min(a.x,b.x),y=Math.min(a.y,b.y);return{x,y,w:Math.abs(a.x-b.x),h:Math.abs(a.y-b.y)};}
+canvas.addEventListener('pointerdown',e=>{
+ if(!state.blurMode||!state.img)return;
+ canvas.setPointerCapture(e.pointerId);
+ dragStart=toImg(e);dragNow=dragStart;e.preventDefault();
+});
+canvas.addEventListener('pointermove',e=>{if(dragStart){dragNow=toImg(e);render();}});
+function endDrag(){
+ if(!dragStart)return;
+ const r=normRect(dragStart,dragNow);
+ if(r.w>6&&r.h>6)state.blurs.push(r);
+ dragStart=null;dragNow=null;render();
+}
+canvas.addEventListener('pointerup',endDrag);
+canvas.addEventListener('pointercancel',endDrag);
+$('blurBtn').onclick=()=>{
+ state.blurMode=!state.blurMode;
+ $('blurBtn').classList.toggle('active',state.blurMode);
+ toast(state.blurMode?'Drag your finger over anything private':'Blur mode off');
+};
+$('blurUndo').onclick=()=>{state.blurs.pop();render();};
+$('blurClear').onclick=()=>{state.blurs=[];render();};
 
 /* ---------- Logo upload ---------- */
 $('logoInput').addEventListener('change',e=>{
@@ -246,21 +296,44 @@ GRADIENTS.forEach((g,i)=>{
  d.onclick=()=>{sw.querySelectorAll('.swatch').forEach(x=>x.classList.remove('active'));d.classList.add('active');state.grad=i;render();save();};
  sw.appendChild(d);
 });
+PRESETS.forEach(p=>{
+ const d=document.createElement('div');d.className='chip';d.textContent=p.n;
+ d.onclick=()=>{Object.assign(state,p.v);syncUI();render();save();toast(p.n+' ✓');};
+ $('presets').appendChild(d);
+});
 function chipGroup(id,key){
  const el=$(id);
  el.querySelectorAll('.chip').forEach(c=>c.classList.toggle('active',c.dataset.v===String(state[key])));
  el.addEventListener('click',e=>{const c=e.target.closest('.chip');if(!c)return;el.querySelectorAll('.chip').forEach(x=>x.classList.remove('active'));c.classList.add('active');state[key]=c.dataset.v;render();save();});
 }
-chipGroup('frames','frame');chipGroup('ratios','ratio');
+chipGroup('frames','frame');chipGroup('ratios','ratio');chipGroup('capPos','capPos');
 ['pad','radius','shadow'].forEach(id=>{
  const el=$(id);el.value=state[id];
  const up=()=>{state[id]=+el.value;$(id+'V').textContent=el.value;render();save();};
  el.addEventListener('input',up);up();
 });
 $('caption').value=state.caption||'';
+function syncUI(){
+ ['pad','radius','shadow'].forEach(id=>{$(id).value=state[id];$(id+'V').textContent=state[id];});
+ document.querySelectorAll('#ratios .chip').forEach(c=>c.classList.toggle('active',c.dataset.v===String(state.ratio)));
+ document.querySelectorAll('#frames .chip').forEach(c=>c.classList.toggle('active',c.dataset.v===String(state.frame)));
+ document.querySelectorAll('#capPos .chip').forEach(c=>c.classList.toggle('active',c.dataset.v===state.capPos));
+ document.querySelectorAll('.swatch').forEach((s,i)=>s.classList.toggle('active',i===state.grad));
+}
 
 /* ---------- Drawing engine ---------- */
 function roundRect(c,x,y,w,h,r){r=Math.min(r,w/2,h/2);c.beginPath();c.moveTo(x+r,y);c.arcTo(x+w,y,x+w,y+h,r);c.arcTo(x+w,y+h,x,y+h,r);c.arcTo(x,y+h,x,y,r);c.arcTo(x,y,x+w,y,r);c.closePath();}
+function pixelate(bx,by,bw,bh){
+ bw=Math.round(bw);bh=Math.round(bh);if(bw<2||bh<2)return;
+ const t=document.createElement('canvas');
+ const s=Math.max(3,Math.round(Math.min(bw,bh)/16));
+ t.width=Math.max(1,Math.ceil(bw/s));t.height=Math.max(1,Math.ceil(bh/s));
+ const tc=t.getContext('2d');
+ tc.drawImage(canvas,bx,by,bw,bh,0,0,t.width,t.height);
+ ctx.imageSmoothingEnabled=false;
+ ctx.drawImage(t,0,0,t.width,t.height,bx,by,bw,bh);
+ ctx.imageSmoothingEnabled=true;
+}
 function render(){
  const img=state.img;if(!img)return;
  let iw=img.naturalWidth,ih=img.naturalHeight;
@@ -279,12 +352,16 @@ function render(){
  const grad=ctx.createLinearGradient(0,0,outW,outH);grad.addColorStop(0,g[0]);grad.addColorStop(1,g[1]);
  ctx.fillStyle=grad;ctx.fillRect(0,0,outW,outH);
 
+ const x=(outW-cardW)/2;
+ const y=((outH-textOffset-cardH)/2)+(state.capPos==='bottom'?0:textOffset);
+ L={ix:x+borderW,iy:y+barH+borderW,iw,ih};
+
  if(state.caption){
   ctx.fillStyle='#ffffff';ctx.font=`bold ${Math.round(42*k)}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`;ctx.textAlign='center';
-  ctx.fillText(state.caption,outW/2,pad+Math.round(45*k));
+  const ty=state.capPos==='bottom'?y+cardH+pad+Math.round(45*k):pad+Math.round(45*k);
+  ctx.fillText(state.caption,outW/2,ty);
  }
 
- const x=(outW-cardW)/2,y=((outH-textOffset-cardH)/2)+textOffset;
  if(blur>0){ctx.save();ctx.shadowColor='rgba(0,0,0,.45)';ctx.shadowBlur=blur;ctx.shadowOffsetY=blur*.4;ctx.fillStyle='#000';roundRect(ctx,x,y,cardW,cardH,state.frame==='phone'?radius*1.5:radius);ctx.fill();ctx.restore();}
 
  ctx.save();
@@ -303,6 +380,17 @@ function render(){
 
  ctx.drawImage(img,x+borderW,y+barH+borderW,iw,ih);
  ctx.restore();
+
+ /* privacy blurs */
+ state.blurs.forEach(r=>pixelate(L.ix+r.x,L.iy+r.y,r.w,r.h));
+ if(dragStart&&dragNow){
+  const r=normRect(dragStart,dragNow);
+  if(r.w>2&&r.h>2){
+   pixelate(L.ix+r.x,L.iy+r.y,r.w,r.h);
+   ctx.save();ctx.strokeStyle='#fff';ctx.lineWidth=2;ctx.setLineDash([6,5]);
+   ctx.strokeRect(L.ix+r.x,L.iy+r.y,r.w,r.h);ctx.restore();
+  }
+ }
 
  /* SnapFrame badge (bottom-right) */
  ctx.save();
