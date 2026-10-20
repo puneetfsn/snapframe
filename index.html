@@ -669,5 +669,648 @@ window.addEventListener('appinstalled',()=>$('installBtn').style.display='none')
 if('serviceWorker' in navigator)navigator.serviceWorker.register('./sw.js').catch(()=>{});
 syncUI();updateModeUI();
 </script>
+<script>
+/* =========================================================
+   SNAPFRAME FINAL POLISH
+   Logo / brand image mover + Feedback system
+   ========================================================= */
+(() => {
+  const REPO_URL = 'https://github.com/puneetfsn/snapframe';
+  const BRAND_IMAGE_KEY = 'snapframe-brand-image';
+  const BRAND_SETTINGS_KEY = 'snapframe-brand-settings';
+
+  /* ---------- Extra styling ---------- */
+  const extraStyle = document.createElement('style');
+  extraStyle.textContent = `
+    #feedbackBtn{
+      color:#c4b5fd;
+    }
+
+    .feedback-home{
+      margin-top:12px;
+      border:0;
+      background:transparent;
+      color:#c4b5fd;
+      text-decoration:underline;
+      cursor:pointer;
+      font-size:13px;
+    }
+
+    .brand-logo-row{
+      margin-bottom:10px;
+    }
+
+    .brand-size.active{
+      background:#7848e7 !important;
+      border-color:#a78bfa !important;
+      color:#fff !important;
+    }
+
+    .logo-tip{
+      margin-top:10px;
+      margin-bottom:0;
+    }
+
+    .feedback-choice{
+      display:block;
+      width:100%;
+      text-align:left;
+      text-decoration:none;
+      color:#f4f4f8;
+      background:#292938;
+      border:1px solid #ffffff20;
+      padding:13px 14px;
+      border-radius:12px;
+      margin:9px 0;
+      font-weight:700;
+    }
+
+    .feedback-choice:hover{
+      border-color:#a78bfa;
+      background:#343347;
+    }
+
+    .feedback-email{
+      display:block;
+      text-align:center;
+      color:#c4b5fd;
+      margin-top:14px;
+      font-size:14px;
+    }
+
+    .feedback-warning{
+      color:#aaa !important;
+      font-size:12px !important;
+      border-top:1px solid #ffffff18;
+      padding-top:12px;
+      margin-top:14px;
+    }
+
+    @media(min-width:541px){
+      .feedback-home{display:none}
+    }
+
+    @media(max-width:540px){
+      #feedbackBtn{display:none}
+    }
+  `;
+  document.head.appendChild(extraStyle);
+
+  /* ---------- Find existing app items ---------- */
+  const logoAddOld = document.getElementById('addLogo');
+  const logoFile = document.getElementById('logoFile');
+  const canvasEl = document.getElementById('canvas');
+
+  if (!logoAddOld || !logoFile || !canvasEl) {
+    console.log('SnapFrame final polish: required elements not found.');
+    return;
+  }
+
+  /* ---------- Replace existing logo controls ---------- */
+  const logoRow = logoAddOld.closest('.row');
+
+  logoRow.innerHTML = `
+    <label>Logo / brand image</label>
+
+    <div class="chips brand-logo-row">
+      <button class="chip" id="addLogo" type="button">+ Add image</button>
+      <button class="chip" id="removeLogo" type="button">Remove</button>
+    </div>
+
+    <div class="chips" id="brandSizes">
+      <button class="chip brand-size" type="button" data-brand-size="5">5%</button>
+      <button class="chip brand-size active" type="button" data-brand-size="10">10%</button>
+      <button class="chip brand-size" type="button" data-brand-size="25">25%</button>
+    </div>
+
+    <p class="note logo-tip">
+      Add a logo, photo, sticker, or profile image. Drag it directly on the preview to move it.
+      Turn off Cover mode before dragging.
+    </p>
+  `;
+
+  const addLogoBtn = document.getElementById('addLogo');
+  const removeLogoBtn = document.getElementById('removeLogo');
+  const brandSizes = document.getElementById('brandSizes');
+
+  /* ---------- Brand image state ---------- */
+  const brand = {
+    image: null,
+    size: 10,
+    x: 0.05,
+    y: 0.78
+  };
+
+  try {
+    const savedSettings = JSON.parse(
+      localStorage.getItem(BRAND_SETTINGS_KEY) || '{}'
+    );
+
+    if ([5, 10, 25].includes(Number(savedSettings.size))) {
+      brand.size = Number(savedSettings.size);
+    }
+
+    if (typeof savedSettings.x === 'number') brand.x = savedSettings.x;
+    if (typeof savedSettings.y === 'number') brand.y = savedSettings.y;
+  } catch (_) {}
+
+  function saveBrandSettings() {
+    try {
+      localStorage.setItem(
+        BRAND_SETTINGS_KEY,
+        JSON.stringify({
+          size: brand.size,
+          x: brand.x,
+          y: brand.y
+        })
+      );
+    } catch (_) {}
+  }
+
+  function updateBrandSizeButtons() {
+    document.querySelectorAll('[data-brand-size]').forEach(button => {
+      button.classList.toggle(
+        'active',
+        Number(button.dataset.brandSize) === brand.size
+      );
+    });
+  }
+
+  updateBrandSizeButtons();
+
+  /* ---------- Hide old small-logo renderer ---------- */
+  const originalRender = render;
+
+  render = function () {
+    const oldLogo = state.logo;
+
+    /* Prevent old fixed bottom-left logo from drawing */
+    state.logo = null;
+    originalRender();
+    state.logo = oldLogo;
+
+    drawBrandImage();
+  };
+
+  /* ---------- Draw adjustable logo/image ---------- */
+  let logoBox = null;
+  let logoDrag = null;
+
+  function drawBrandImage() {
+    logoBox = null;
+
+    if (!brand.image || !canvasEl.width || !canvasEl.height) return;
+
+    const imageWidth = brand.image.naturalWidth || brand.image.width;
+    const imageHeight = brand.image.naturalHeight || brand.image.height;
+
+    if (!imageWidth || !imageHeight) return;
+
+    const canvasWidth = canvasEl.width;
+    const canvasHeight = canvasEl.height;
+    const ratio = imageWidth / imageHeight;
+
+    /* Brand size is % of post width */
+    let width = Math.max(18, canvasWidth * (brand.size / 100));
+    let height = width / ratio;
+
+    /* Avoid extremely tall images taking over the post */
+    const maxHeight = canvasHeight * 0.42;
+
+    if (height > maxHeight) {
+      height = maxHeight;
+      width = height * ratio;
+    }
+
+    let x = brand.x * canvasWidth;
+    let y = brand.y * canvasHeight;
+
+    x = Math.max(0, Math.min(canvasWidth - width, x));
+    y = Math.max(0, Math.min(canvasHeight - height, y));
+
+    brand.x = x / canvasWidth;
+    brand.y = y / canvasHeight;
+
+    const drawContext = canvasEl.getContext('2d');
+
+    drawContext.save();
+
+    /* Draw using actual exported image pixels */
+    drawContext.setTransform(1, 0, 0, 1, 0, 0);
+
+    drawContext.shadowColor = 'rgba(0,0,0,.60)';
+    drawContext.shadowBlur = Math.max(4, canvasWidth * 0.008);
+    drawContext.shadowOffsetY = Math.max(2, canvasWidth * 0.003);
+
+    drawContext.drawImage(brand.image, x, y, width, height);
+
+    /* White outline while moving */
+    if (logoDrag) {
+      drawContext.shadowColor = 'transparent';
+      drawContext.strokeStyle = '#ffffff';
+      drawContext.lineWidth = Math.max(2, canvasWidth * 0.003);
+      drawContext.setLineDash([8, 6]);
+      drawContext.strokeRect(x, y, width, height);
+      drawContext.setLineDash([]);
+    }
+
+    drawContext.restore();
+
+    logoBox = { x, y, width, height };
+  }
+
+  /* ---------- Load / save uploaded image ---------- */
+  function loadBrandImage(source, resetPosition = false, saveImage = false) {
+    const image = new Image();
+
+    image.onload = () => {
+      brand.image = image;
+
+      if (resetPosition) {
+        brand.size = 10;
+        brand.x = 0.05;
+        brand.y = 0.78;
+      }
+
+      saveBrandSettings();
+      updateBrandSizeButtons();
+
+      if (saveImage) {
+        saveSmallBrandImage(image);
+      }
+
+      render();
+      notify('Brand image added ✓');
+    };
+
+    image.onerror = () => {
+      notify('Could not load that image. Try PNG, JPG or WebP.');
+    };
+
+    image.src = source;
+  }
+
+  function saveSmallBrandImage(image) {
+    try {
+      const smallCanvas = document.createElement('canvas');
+      const maxDimension = 360;
+
+      const scale = Math.min(
+        1,
+        maxDimension / Math.max(image.naturalWidth, image.naturalHeight)
+      );
+
+      smallCanvas.width = Math.max(
+        1,
+        Math.round(image.naturalWidth * scale)
+      );
+
+      smallCanvas.height = Math.max(
+        1,
+        Math.round(image.naturalHeight * scale)
+      );
+
+      smallCanvas
+        .getContext('2d')
+        .drawImage(image, 0, 0, smallCanvas.width, smallCanvas.height);
+
+      localStorage.setItem(
+        BRAND_IMAGE_KEY,
+        smallCanvas.toDataURL('image/png')
+      );
+    } catch (_) {
+      notify('Image added, but it may not stay saved after closing the app.');
+    }
+  }
+
+  /* Restore new saved image. Also uses your previous logo if one exists. */
+  const savedBrandImage =
+    localStorage.getItem(BRAND_IMAGE_KEY) ||
+    localStorage.getItem('snapframe-logo');
+
+  if (savedBrandImage) {
+    loadBrandImage(savedBrandImage, false, false);
+  }
+
+  /* ---------- Add / remove logo ---------- */
+  addLogoBtn.onclick = () => {
+    logoFile.value = '';
+    logoFile.click();
+  };
+
+  logoFile.onchange = event => {
+    const file = event.target.files && event.target.files[0];
+
+    if (!file) return;
+
+    if (
+      !file.type.startsWith('image/') &&
+      !/\.(png|jpg|jpeg|webp|gif)$/i.test(file.name || '')
+    ) {
+      notify('Please choose an image file.');
+      return;
+    }
+
+    const reader = new FileReader();
+
+    reader.onload = () => {
+      loadBrandImage(reader.result, true, true);
+    };
+
+    reader.onerror = () => {
+      notify('Could not read this image.');
+    };
+
+    reader.readAsDataURL(file);
+  };
+
+  removeLogoBtn.onclick = () => {
+    brand.image = null;
+    logoBox = null;
+
+    localStorage.removeItem(BRAND_IMAGE_KEY);
+    localStorage.removeItem('snapframe-logo');
+
+    render();
+    notify('Brand image removed');
+  };
+
+  brandSizes.onclick = event => {
+    const button = event.target.closest('[data-brand-size]');
+
+    if (!button) return;
+
+    brand.size = Number(button.dataset.brandSize);
+
+    saveBrandSettings();
+    updateBrandSizeButtons();
+    render();
+  };
+
+  /* ---------- Drag logo directly on preview ---------- */
+  function canvasPoint(event) {
+    const rect = canvasEl.getBoundingClientRect();
+
+    return {
+      x: (event.clientX - rect.left) * (canvasEl.width / rect.width),
+      y: (event.clientY - rect.top) * (canvasEl.height / rect.height)
+    };
+  }
+
+  function pointInsideLogo(point) {
+    if (!logoBox) return false;
+
+    return (
+      point.x >= logoBox.x &&
+      point.x <= logoBox.x + logoBox.width &&
+      point.y >= logoBox.y &&
+      point.y <= logoBox.y + logoBox.height
+    );
+  }
+
+  const originalPointerDown = canvasEl.onpointerdown;
+  const originalPointerMove = canvasEl.onpointermove;
+  const originalPointerUp = canvasEl.onpointerup;
+  const originalPointerCancel = canvasEl.onpointercancel;
+
+  canvasEl.onpointerdown = function (event) {
+    const point = canvasPoint(event);
+
+    /* Cover mode always gets priority */
+    if (
+      brand.image &&
+      !state.coverMode &&
+      pointInsideLogo(point)
+    ) {
+      logoDrag = {
+        offsetX: point.x - logoBox.x,
+        offsetY: point.y - logoBox.y
+      };
+
+      try {
+        canvasEl.setPointerCapture(event.pointerId);
+      } catch (_) {}
+
+      event.preventDefault();
+      render();
+      return;
+    }
+
+    if (originalPointerDown) {
+      originalPointerDown.call(canvasEl, event);
+    }
+  };
+
+  canvasEl.onpointermove = function (event) {
+    if (logoDrag && brand.image && logoBox) {
+      const point = canvasPoint(event);
+
+      let x = point.x - logoDrag.offsetX;
+      let y = point.y - logoDrag.offsetY;
+
+      x = Math.max(0, Math.min(canvasEl.width - logoBox.width, x));
+      y = Math.max(0, Math.min(canvasEl.height - logoBox.height, y));
+
+      brand.x = x / canvasEl.width;
+      brand.y = y / canvasEl.height;
+
+      render();
+      return;
+    }
+
+    if (originalPointerMove) {
+      originalPointerMove.call(canvasEl, event);
+    }
+  };
+
+  function finishLogoDrag(event) {
+    if (logoDrag) {
+      logoDrag = null;
+      saveBrandSettings();
+      render();
+
+      try {
+        canvasEl.releasePointerCapture(event.pointerId);
+      } catch (_) {}
+
+      return;
+    }
+
+    if (originalPointerUp) {
+      originalPointerUp.call(canvasEl, event);
+    }
+  }
+
+  canvasEl.onpointerup = finishLogoDrag;
+
+  canvasEl.onpointercancel = function (event) {
+    if (logoDrag) {
+      logoDrag = null;
+      saveBrandSettings();
+      render();
+      return;
+    }
+
+    if (originalPointerCancel) {
+      originalPointerCancel.call(canvasEl, event);
+    }
+  };
+
+  /* ---------- Feedback system ---------- */
+  const featureUrl =
+    REPO_URL +
+    '/issues/new?title=' +
+    encodeURIComponent('[Feature] ') +
+    '&body=' +
+    encodeURIComponent(
+      '## What feature would you like?\n\n' +
+      'Write your idea here.\n\n' +
+      '## Why would this help?\n\n' +
+      'Tell us how you would use it.\n\n' +
+      '## Device / browser\n\n' +
+      'Example: Android Chrome, iPhone Safari, Windows Chrome.'
+    );
+
+  const bugUrl =
+    REPO_URL +
+    '/issues/new?title=' +
+    encodeURIComponent('[Bug] ') +
+    '&body=' +
+    encodeURIComponent(
+      '## What happened?\n\n' +
+      'Describe the problem.\n\n' +
+      '## What did you expect to happen?\n\n' +
+      'Describe what should have happened.\n\n' +
+      '## Steps to reproduce\n\n' +
+      '1. \n2. \n3. \n\n' +
+      '## Device / browser\n\n' +
+      'Example: Android Chrome, iPhone Safari, Windows Chrome.'
+    );
+
+  const emailUrl =
+    'mailto:puneetfsn@gmail.com?subject=' +
+    encodeURIComponent('SnapFrame feedback') +
+    '&body=' +
+    encodeURIComponent(
+      'Hello Puneet,\n\n' +
+      'I have feedback for SnapFrame:\n\n'
+    );
+
+  const headerActions = document.querySelector('.header-actions');
+
+  const feedbackButton = document.createElement('button');
+  feedbackButton.id = 'feedbackBtn';
+  feedbackButton.className = 'smallbtn';
+  feedbackButton.type = 'button';
+  feedbackButton.textContent = '✦ Feedback';
+  feedbackButton.title = 'Request a feature or report a problem';
+
+  if (headerActions) {
+    const installButton = document.getElementById('installBtn');
+
+    if (installButton) {
+      headerActions.insertBefore(feedbackButton, installButton);
+    } else {
+      headerActions.appendChild(feedbackButton);
+    }
+  }
+
+  const homeFeedback = document.createElement('button');
+  homeFeedback.id = 'feedbackHome';
+  homeFeedback.className = 'feedback-home';
+  homeFeedback.type = 'button';
+  homeFeedback.textContent = '✦ Suggest a feature or report a problem';
+
+  const dropzone = document.getElementById('dropzone');
+
+  if (dropzone) {
+    dropzone.appendChild(homeFeedback);
+  }
+
+  const feedbackRow = document.createElement('div');
+  feedbackRow.className = 'row';
+  feedbackRow.innerHTML = `
+    <label>Help improve SnapFrame</label>
+    <button class="chip" id="feedbackControlBtn" type="button">
+      ✦ Request a feature / report a problem
+    </button>
+  `;
+
+  const controls = document.getElementById('controls');
+
+  if (controls) {
+    controls.appendChild(feedbackRow);
+  }
+
+  const feedbackModal = document.createElement('div');
+  feedbackModal.className = 'modal';
+  feedbackModal.id = 'feedbackModal';
+
+  feedbackModal.innerHTML = `
+    <div class="modalbox">
+      <button id="closeFeedbackModal" aria-label="Close">×</button>
+
+      <h2>Help improve SnapFrame</h2>
+
+      <p>
+        SnapFrame is a free learning project. Your ideas and bug reports help
+        decide what gets built next.
+      </p>
+
+      <a class="feedback-choice"
+         href="${featureUrl}"
+         target="_blank"
+         rel="noopener">
+        ✦ Request a feature on GitHub
+      </a>
+
+      <a class="feedback-choice"
+         href="${bugUrl}"
+         target="_blank"
+         rel="noopener">
+        ⚠ Report a problem on GitHub
+      </a>
+
+      <a class="feedback-email" href="${emailUrl}">
+        ✉ Prefer email? Contact puneetfsn@gmail.com
+      </a>
+
+      <p class="feedback-warning">
+        GitHub Issues are public. Please do not upload private screenshots,
+        passwords, bank details, phone numbers, OTPs, or personal medical information.
+      </p>
+    </div>
+  `;
+
+  document.body.appendChild(feedbackModal);
+
+  function openFeedback() {
+    feedbackModal.classList.add('open');
+  }
+
+  function closeFeedback() {
+    feedbackModal.classList.remove('open');
+  }
+
+  feedbackButton.onclick = openFeedback;
+
+  homeFeedback.onclick = event => {
+    event.stopPropagation();
+    openFeedback();
+  };
+
+  document.getElementById('feedbackControlBtn').onclick = openFeedback;
+  document.getElementById('closeFeedbackModal').onclick = closeFeedback;
+
+  feedbackModal.onclick = event => {
+    if (event.target === feedbackModal) {
+      closeFeedback();
+    }
+  };
+
+  /* Draw once so older small logo disappears */
+  render();
+})();
+</script>
 </body>
 </html>
