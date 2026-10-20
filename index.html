@@ -762,7 +762,152 @@ function getBlob(){return new Promise(r=>canvas.toBlob(r,'image/png'));}
 async function downloadCanvas(){const b=await getBlob();const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='snapframe.png';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),2000);toast('Saved!');}
 async function shareCanvas(){const b=await getBlob();const f=new File([b],'snapframe.png',{type:'image/png'});if(navigator.canShare&&navigator.canShare({files:[f]})){try{await navigator.share({files:[f],title:'SnapFrame'});}catch(e){}}else downloadCanvas();}
 async function copyCanvas(){try{const b=await getBlob();await navigator.clipboard.write([new ClipboardItem({'image/png':b})]);toast('Copied!');}catch(e){toast('Use Download');}}
+/* ===== SnapFrame Upload Repair v12 ===== */
+(function(){
+  const dz = document.getElementById('dropzone');
+  const fi = document.getElementById('fileInput');
 
+  if(!dz || !fi){
+    alert('SnapFrame upload repair could not find the upload box.');
+    return;
+  }
+
+  /* Add a visible fallback upload button */
+  if(!document.getElementById('chooseFallbackBtn')){
+    const btn = document.createElement('button');
+    btn.id = 'chooseFallbackBtn';
+    btn.type = 'button';
+    btn.textContent = 'Choose screenshot';
+    btn.style.cssText = `
+      margin-top:18px;
+      padding:13px 20px;
+      border:none;
+      border-radius:14px;
+      background:linear-gradient(135deg,#8b5cf6,#7c3aed);
+      color:#fff;
+      font-weight:800;
+      font-size:15px;
+      cursor:pointer;
+      box-shadow:0 14px 36px rgba(139,92,246,.28);
+      position:relative;
+      z-index:3;
+    `;
+    btn.addEventListener('click', function(e){
+      e.preventDefault();
+      e.stopPropagation();
+      fi.value = '';
+      fi.click();
+    });
+    dz.appendChild(btn);
+  }
+
+  function isProbablyImage(file){
+    if(!file) return false;
+
+    const type = (file.type || '').toLowerCase();
+    const name = (file.name || '').toLowerCase();
+
+    return (
+      type.startsWith('image/') ||
+      /\.(png|jpg|jpeg|webp|gif|bmp|avif)$/i.test(name) ||
+      type === ''
+    );
+  }
+
+  function repairLoadFile(file){
+    if(!file){
+      toast('No file selected');
+      return;
+    }
+
+    if(!isProbablyImage(file)){
+      toast('Please choose an image file');
+      return;
+    }
+
+    const reader = new FileReader();
+
+    reader.onload = function(){
+      const img = new Image();
+
+      img.onload = function(){
+        state.img = img;
+
+        if(Array.isArray(state.blurs)){
+          state.blurs = [];
+        }
+
+        try{
+          if(typeof dragStart !== 'undefined') dragStart = null;
+          if(typeof dragNow !== 'undefined') dragNow = null;
+        }catch(e){}
+
+        showEditor();
+        render();
+        toast('Screenshot loaded ✓');
+      };
+
+      img.onerror = function(){
+        toast('Could not read this image. Try PNG or JPG.');
+      };
+
+      img.src = reader.result;
+    };
+
+    reader.onerror = function(){
+      toast('Could not open this file');
+    };
+
+    reader.readAsDataURL(file);
+  }
+
+  /* File picker fix */
+  fi.addEventListener('change', function(e){
+    e.preventDefault();
+    e.stopImmediatePropagation();
+    repairLoadFile(e.target.files && e.target.files[0]);
+  }, true);
+
+  /* Upload card click fix */
+  dz.addEventListener('click', function(e){
+    if(e.target.closest('a, button, label, input')) return;
+
+    e.preventDefault();
+    e.stopImmediatePropagation();
+
+    fi.value = '';
+    fi.click();
+  }, true);
+
+  /* Drag-drop fix */
+  document.addEventListener('drop', function(e){
+    if(!e.dataTransfer || !e.dataTransfer.files || !e.dataTransfer.files.length) return;
+
+    e.preventDefault();
+    e.stopImmediatePropagation();
+
+    dz.classList.remove('over');
+    repairLoadFile(e.dataTransfer.files[0]);
+  }, true);
+
+  /* Paste image fix */
+  document.addEventListener('paste', function(e){
+    const items = e.clipboardData && e.clipboardData.items;
+    if(!items) return;
+
+    for(const item of items){
+      if(item.kind === 'file' || item.type.startsWith('image/')){
+        const file = item.getAsFile();
+        if(file){
+          e.preventDefault();
+          e.stopImmediatePropagation();
+          repairLoadFile(file);
+          break;
+        }
+      }
+    }
+  }, true);
+})();
 if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});
 </script>
 </body>
