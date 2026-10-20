@@ -2,615 +2,672 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>SnapFrame</title>
-<meta name="description" content="Beautify screenshots in seconds. Frames, captions, privacy blur, social sizes. Free forever.">
-<link rel="manifest" href="manifest.json">
-<link rel="icon" type="image/png" href="icon-192.png">
-<link rel="apple-touch-icon" href="icon-192.png">
-<meta name="theme-color" content="#0d0d14">
-<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>SnapFrame — Free Screenshot Beautifier</title>
+<meta name="theme-color" content="#111118">
+<link rel="manifest" href="./manifest.json">
+<link rel="icon" href="./icon-192.png" type="image/png">
+<link rel="apple-touch-icon" href="./icon-192.png">
 <style>
-*{box-sizing:border-box;margin:0;padding:0}
-html,body{height:100%}
-body{
- font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
- color:#eee;overflow:hidden;
- display:grid;grid-template-rows:auto 1fr auto;height:100dvh;
- background:
-  radial-gradient(circle at 20% 10%, rgba(139,92,246,.22), transparent 32%),
-  radial-gradient(circle at 80% 20%, rgba(59,130,246,.14), transparent 30%),
-  radial-gradient(circle at 50% 90%, rgba(236,72,153,.10), transparent 35%),
-  #0d0d14;
-}
-/* ---------- Header ---------- */
-header{
- width:min(1120px,calc(100% - 24px));margin:12px auto 0;
- display:flex;align-items:center;justify-content:space-between;gap:10px;
- padding:10px 12px;border-radius:18px;
- background:rgba(18,18,28,.78);
- border:1px solid rgba(255,255,255,.08);
- backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
- box-shadow:0 18px 60px rgba(0,0,0,.22);
-}
-.logo-area{display:flex;align-items:center;gap:10px}
-.logo-img{width:34px;height:34px;border-radius:10px;object-fit:cover;border:1px solid rgba(255,255,255,.18);box-shadow:0 0 18px rgba(139,92,246,.28)}
-header h1{font-size:21px;font-weight:800;letter-spacing:-.6px}
-header h1 span{background:linear-gradient(135deg,#a78bfa,#7c3aed);-webkit-background-clip:text;background-clip:text;color:transparent}
-.header-actions{display:flex;gap:8px;align-items:center;margin-left:auto}
-#supportBtn{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);color:#ff7ab6;padding:8px 13px;border-radius:12px;font-size:13px;font-weight:700;cursor:pointer}
-#installBtn{background:linear-gradient(135deg,#8b5cf6,#7c3aed);border:none;color:#fff;padding:8px 13px;border-radius:12px;font-size:13px;font-weight:700;cursor:pointer;display:none}
-#newBtn{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);color:#ddd;padding:8px 13px;border-radius:12px;font-size:13px;font-weight:700;cursor:pointer;display:none}
-/* ---------- Preview / hero ---------- */
-#preview{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;padding:28px 16px;min-height:0;width:100%}
-#preview::before{
- content:"Beautify screenshots in seconds";
- text-align:center;font-weight:900;letter-spacing:-2px;line-height:1.05;
- font-size:clamp(30px,4.5vw,56px);
- background:linear-gradient(135deg,#fff,#c4b5fd,#8b5cf6);
- -webkit-background-clip:text;background-clip:text;color:transparent;
-}
-#preview::after{
- content:"Frames, captions, privacy blur and social-ready sizes. 100% free.";
- text-align:center;color:#9ca3af;font-size:clamp(14px,1.6vw,17px);
- max-width:560px;line-height:1.5;margin-bottom:4px;
-}
-body.editing #preview::before,body.editing #preview::after{display:none}
-#canvas{max-width:100%;max-height:100%;border-radius:18px;display:none;
- box-shadow:0 30px 90px rgba(0,0,0,.5),0 0 40px rgba(139,92,246,.12);
- touch-action:none;-webkit-user-select:none;user-select:none}
-/* ---------- Upload card ---------- */
-#dropzone{
- position:relative;max-width:520px;width:100%;min-height:320px;
- border-radius:30px;cursor:pointer;overflow:hidden;
- display:flex;flex-direction:column;align-items:center;justify-content:center;
- text-align:center;padding:36px 24px;
- background:linear-gradient(180deg,rgba(255,255,255,.07),rgba(255,255,255,.02)),rgba(19,19,30,.72);
- border:1px solid rgba(255,255,255,.10);
- box-shadow:0 30px 90px rgba(0,0,0,.42),inset 0 1px 0 rgba(255,255,255,.08);
- transition:transform .2s,border-color .2s,box-shadow .2s;
-}
-#dropzone::before{content:"";position:absolute;inset:-40%;
- background:radial-gradient(circle at 30% 25%,rgba(139,92,246,.20),transparent 28%),
- radial-gradient(circle at 70% 80%,rgba(236,72,153,.13),transparent 32%);pointer-events:none}
-#dropzone.over{transform:translateY(-3px);border-color:rgba(139,92,246,.55);
- box-shadow:0 36px 100px rgba(0,0,0,.5),0 0 40px rgba(139,92,246,.16)}
-#dropzone>*{position:relative;z-index:1}
-#dropzone .big{
- width:86px;height:86px;display:flex;align-items:center;justify-content:center;
- font-size:44px;margin-bottom:16px;border-radius:24px;
- background:linear-gradient(135deg,rgba(139,92,246,.28),rgba(255,255,255,.06));
- border:1px solid rgba(255,255,255,.10);box-shadow:0 16px 44px rgba(0,0,0,.28);
-}
-#dropzone h2{font-size:23px;letter-spacing:-.4px;margin-bottom:8px}
-#dropzone p{color:#a1a1aa;font-size:14px;line-height:1.55}
-#chooseBtn{
- margin-top:18px;padding:14px 24px;border:none;border-radius:14px;cursor:pointer;
- background:linear-gradient(135deg,#8b5cf6,#7c3aed);color:#fff;
- font-weight:800;font-size:15px;font-family:inherit;
- box-shadow:0 14px 36px rgba(139,92,246,.30);
-}
-.free-line{margin-top:16px;padding:8px 14px;border-radius:999px;
- background:rgba(255,255,255,.055);border:1px solid rgba(255,255,255,.08);
- font-size:12px;color:#a1a1aa}
-.free-line a{color:#c4b5fd;text-decoration:none;font-weight:600}
-/* ---------- Controls ---------- */
-#controls{background:rgba(20,20,31,.94);border-top:1px solid #222;
- padding:12px 16px calc(12px + env(safe-area-inset-bottom));
- max-height:46vh;overflow-y:auto;display:none}
-.row{margin-bottom:14px}
-.row label{display:block;font-size:11px;color:#aaa;margin-bottom:6px;text-transform:uppercase;letter-spacing:.6px;font-weight:700}
-input[type=range]{width:100%;accent-color:#8b5cf6}
-.text-input{width:100%;background:#2a2a38;border:1px solid #3a3a4e;color:#fff;padding:10px;border-radius:10px;font-size:14px;outline:none;font-family:inherit}
-.swatches{display:flex;gap:8px;overflow-x:auto;padding:2px 0 4px}
-.swatch{flex:0 0 40px;height:40px;border-radius:50%;border:3px solid transparent;cursor:pointer}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{font-family:system-ui,-apple-system,sans-serif;color:#f4f4f8;background:radial-gradient(circle at 50% 15%,#282041,#111118 55%);min-height:100dvh;display:flex;flex-direction:column}
+button,input{font:inherit}
+button{cursor:pointer}
+header{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:12px 18px;background:#15151fe8;border-bottom:1px solid #ffffff16}
+.brand{display:flex;align-items:center;gap:9px;font-size:19px;font-weight:800}
+.brand img{width:34px;height:34px;border-radius:9px}
+.brand span{color:#a78bfa}
+.header-actions{display:flex;gap:7px}
+.smallbtn,.chip{border:1px solid #ffffff20;background:#292938;color:#f4f4f8;border-radius:11px;padding:9px 12px}
+.smallbtn{font-size:13px}
+#installBtn{display:none;background:#7948e7}
+#supportBtn{color:#ff85b9}
+.modebar{display:flex;justify-content:center;gap:8px;flex-wrap:wrap;padding:14px}
+.chip.active{background:#7848e7;border-color:#a78bfa}
+.layout{flex:1;display:flex;min-height:0}
+#stage{flex:1;min-width:0;display:flex;align-items:center;justify-content:center;padding:20px;overflow:auto}
+#home{width:min(540px,100%);text-align:center}
+#home h1{font-size:clamp(29px,5vw,52px);line-height:1.1;margin:0 0 12px}
+#home>p{color:#b6b2c3;line-height:1.5}
+#dropzone{margin:25px auto 0;border:1px dashed #a78bfa80;border-radius:25px;background:linear-gradient(145deg,#272136,#1a1a27);padding:35px 22px;box-shadow:0 20px 70px #0006;cursor:pointer}
+#dropzone.over{border-color:#fff;background:#36274f}
+#dropzone .emoji{font-size:52px}
+#dropzone h2{margin:10px 0 5px}
+#dropzone p{color:#bbb;font-size:14px}
+.primary{background:#8555ed;color:white;border:0;border-radius:12px;padding:12px 16px;font-weight:700}
+#chooseBtn{margin-top:10px}
+#canvas{display:none;max-width:100%;max-height:100%;object-fit:contain;border-radius:9px;box-shadow:0 20px 60px #0009;touch-action:none}
+#controls{display:none;width:350px;flex:0 0 350px;overflow:auto;background:#1b1b27;border-left:1px solid #ffffff18;padding:16px}
+.row{border-bottom:1px solid #ffffff15;padding-bottom:14px;margin-bottom:14px}
+.row>label{display:block;font-size:12px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:#c3bfd1;margin-bottom:9px}
+.chips{display:flex;gap:7px;flex-wrap:wrap}
+.swatches{display:flex;gap:7px;overflow-x:auto;padding:3px}
+.swatch{width:38px;height:38px;flex:0 0 38px;border-radius:50%;border:3px solid transparent;cursor:pointer}
 .swatch.active{border-color:#fff}
-.chips{display:flex;gap:8px;flex-wrap:wrap}
-.chips.scroll{flex-wrap:nowrap;overflow-x:auto;padding-bottom:4px}
-.chip{padding:8px 13px;border-radius:20px;background:#2a2a38;font-size:13px;cursor:pointer;border:1px solid transparent;user-select:none;white-space:nowrap}
-.chip.active{background:#8b5cf6;border-color:#a78bfa}
-.actions{display:flex;gap:8px;margin-top:4px}
-.btn{flex:1;padding:14px 8px;border:none;border-radius:12px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit}
-.btn.primary{background:#8b5cf6;color:#fff}
-.btn.secondary{background:#2a2a38;color:#eee}
-/* ---------- Support modal ---------- */
-.modal{position:fixed;inset:0;background:rgba(0,0,0,.65);display:none;align-items:center;justify-content:center;z-index:1000;padding:20px}
-.modal.open{display:flex}
-.modal-box{background:#1a1a24;border:1px solid #2e2e3e;border-radius:16px;max-width:420px;width:100%;padding:24px;position:relative;max-height:85vh;overflow-y:auto}
-.modal-box h2{font-size:20px;margin-bottom:12px}
-.mission{font-size:14.5px;color:#ddd;line-height:1.65;margin-bottom:16px}
-.modal-box a.donate{display:block;text-align:center;background:#8b5cf6;color:#fff;padding:14px;border-radius:12px;font-weight:700;text-decoration:none;margin-bottom:12px}
-.amt-row{display:flex;gap:8px;justify-content:center;margin-bottom:14px;flex-wrap:wrap}
-.qrwrap{width:max-content;max-width:100%;margin:0 auto 14px;background:#fff;border-radius:12px;padding:12px;text-align:center}
-.qrwrap img{display:block;border-radius:6px}
-.scanhint{font-size:11px;color:#666;margin:6px 0 0}
-.copyid{width:100%;background:#2a2a38;border:1px solid #3a3a4e;color:#eee;padding:12px;border-radius:10px;font-size:14px;cursor:pointer;margin-bottom:14px;font-family:inherit}
-.aware{font-size:12.5px;color:#888;border-top:1px solid #2a2a38;padding-top:12px;margin-bottom:0;line-height:1.6}
-.aware a{color:#a78bfa}
-.closex{position:absolute;top:8px;right:14px;background:none;border:none;color:#888;font-size:24px;cursor:pointer}
-/* ---------- Toast ---------- */
-#toast{position:fixed;top:74px;left:50%;transform:translateX(-50%);
- background:#8b5cf6;color:#fff;padding:10px 18px;border-radius:10px;font-size:14px;
- opacity:0;transition:.3s;pointer-events:none;z-index:1100;max-width:90vw;text-align:center}
+input[type=range]{width:100%;accent-color:#986cff}
+input[type=text]{width:100%;padding:11px;background:#292938;color:white;border:1px solid #ffffff25;border-radius:10px}
+input[type=color]{height:35px;width:48px;background:none;border:0}
+.sliderline{display:flex;align-items:center;gap:8px;font-size:13px;margin:8px 0}
+.sliderline span{width:78px;flex:0 0 78px}
+.sliderline output{width:37px;text-align:right}
+.note{font-size:12px;color:#aaa;line-height:1.5}
+.actions{display:flex;gap:7px;flex-wrap:wrap}
+.actions button{flex:1}
+#stitchTools,#batchTools{display:none}
+#toast{position:fixed;top:75px;left:50%;transform:translateX(-50%);background:#8452ed;padding:10px 15px;border-radius:10px;opacity:0;pointer-events:none;transition:.2s;z-index:5;text-align:center;max-width:90vw}
 #toast.show{opacity:1}
-/* ---------- Desktop ---------- */
-@media(min-width:900px){
- body.editing{grid-template-columns:minmax(0,1fr) 360px}
- body.editing header{grid-column:1/3}
- body.editing #controls{grid-column:2;grid-row:2/4;max-height:none;border-top:none;border-left:1px solid #222}
- body.editing #preview{grid-column:1;grid-row:2}
-}
-/* ---------- Small phones ---------- */
-@media(max-width:640px){
- header h1{font-size:17px}
- .logo-img{width:30px;height:30px}
- #supportBtn,#installBtn,#newBtn{padding:7px 10px;font-size:12px}
- #preview{padding:20px 12px}
- #preview::before{letter-spacing:-1.2px}
- #dropzone{min-height:290px;border-radius:26px}
+.modal{display:none;position:fixed;inset:0;background:#000b;align-items:center;justify-content:center;padding:18px;z-index:10}
+.modal.open{display:flex}
+.modalbox{position:relative;background:#20202e;border:1px solid #ffffff25;border-radius:18px;padding:24px;width:min(430px,100%);max-height:85vh;overflow:auto;line-height:1.6}
+.modalbox p{color:#d1ccdb}
+.modalbox a{color:#c2aaff}
+.modalbox .primary{display:block;text-align:center;text-decoration:none;margin:13px 0}
+#upiQr{display:block;background:white;padding:8px;border-radius:8px;margin:14px auto;max-width:100%;height:auto}
+#closeModal{position:absolute;right:12px;top:9px;background:none;border:0;color:white;font-size:25px}
+@media(max-width:850px){
+ .layout{flex-direction:column}
+ #stage{min-height:38vh;padding:14px}
+ #controls{width:100%;flex:none;max-height:49vh;border-left:0;border-top:1px solid #ffffff18}
+ header{padding:9px}
+ .brand{font-size:16px}
+ .brand img{width:29px;height:29px}
+ .smallbtn{padding:7px;font-size:11px}
 }
 </style>
 </head>
 <body>
-
 <header>
- <div class="logo-area">
-  <img src="icon-192.png" class="logo-img" alt="SnapFrame">
-  <h1>Snap<span>Frame</span></h1>
- </div>
+ <div class="brand"><img src="./icon-192.png" alt=""><div>Snap<span>Frame</span></div></div>
  <div class="header-actions">
-  <button id="supportBtn" type="button">♥ Support</button>
-  <button id="installBtn" type="button">📲 Install App</button>
-  <button id="newBtn" type="button">+ New</button>
+  <button class="smallbtn" id="supportBtn">♥ Support</button>
+  <button class="smallbtn" id="installBtn">Install</button>
+  <button class="smallbtn" id="newBtn">+ New</button>
  </div>
 </header>
 
-<main id="preview">
- <div id="dropzone">
-  <div class="big">📸</div>
-  <h2>Tap to pick a screenshot</h2>
-  <p>or drag &amp; drop here<br>or press <b>Ctrl+V / ⌘V</b> to paste</p>
-  <button id="chooseBtn" type="button">Choose screenshot</button>
-  <p class="free-line">100% free · no ads · <a href="#" id="supportLink">♥ support our mission</a></p>
- </div>
- <canvas id="canvas"></canvas>
- <input type="file" id="fileInput" accept="image/*" hidden>
-</main>
-
-<section id="controls">
- <div class="row"><label>One-tap Presets</label><div class="chips scroll" id="presets"></div></div>
- <div class="row"><label>Background</label><div class="swatches" id="swatches"></div></div>
- <div class="row"><label>Add Caption</label>
-  <input type="text" id="caption" class="text-input" placeholder="Type title here..." value="">
-  <div class="chips" id="capPos" style="margin-top:8px">
-   <div class="chip" data-v="top">⬆ Top</div>
-   <div class="chip" data-v="bottom">⬇ Bottom</div>
-  </div>
- </div>
- <div class="row"><label>Hide Private Info</label>
-  <div class="chips">
-   <div class="chip" id="blurBtn">🔒 Blur mode</div>
-   <div class="chip" id="blurUndo">↺ Undo</div>
-   <div class="chip" id="blurClear">🗑 Clear</div>
-  </div>
- </div>
- <div class="row"><label>Your Logo (bottom-left)</label>
-  <div class="chips">
-   <label class="chip" id="logoAdd" for="logoInput">+ Add logo</label>
-   <div class="chip" id="logoRemove" style="display:none">✕ Remove</div>
-  </div>
-  <input type="file" id="logoInput" accept="image/*" hidden>
- </div>
- <div class="row"><label>Frame</label>
-  <div class="chips" id="frames">
-   <div class="chip" data-v="none">None</div>
-   <div class="chip" data-v="mac">macOS Bar</div>
-   <div class="chip" data-v="phone">iPhone Black</div>
-  </div>
- </div>
- <div class="row"><label>Size</label>
-  <div class="chips" id="ratios">
-   <div class="chip" data-v="auto">Auto</div>
-   <div class="chip" data-v="1">1:1 Square</div>
-   <div class="chip" data-v="0.8">4:5 Insta</div>
-   <div class="chip" data-v="1.7778">16:9 X</div>
-   <div class="chip" data-v="0.5625">9:16 Story</div>
-  </div>
- </div>
- <div class="row"><label>Padding <span id="padV"></span></label><input type="range" id="pad" min="0" max="200" value="60"></div>
- <div class="row"><label>Corners <span id="radiusV"></span></label><input type="range" id="radius" min="0" max="80" value="20"></div>
- <div class="row"><label>Shadow <span id="shadowV"></span></label><input type="range" id="shadow" min="0" max="100" value="40"></div>
- <div class="actions">
-  <button class="btn secondary" type="button" onclick="copyCanvas()">Copy</button>
-  <button class="btn secondary" type="button" onclick="downloadCanvas()">Download</button>
-  <button class="btn primary" type="button" onclick="shareCanvas()">Share</button>
- </div>
-</section>
-
-<div class="modal" id="supportModal">
- <div class="modal-box">
-  <button class="closex" id="closeModal" type="button">×</button>
-  <h2>♥ Support SnapFrame</h2>
-  <p class="mission">I'm teaching myself to build free tools. SnapFrame is the first — 100% free, no ads, no locked features. Donations go toward keeping my tools free and supporting schizophrenia awareness — a condition 1 in 300 people live with, and one of the most misunderstood illnesses on Earth.</p>
-  <div class="amt-row">
-   <button class="chip amt" type="button" data-v="29">₹29</button>
-   <button class="chip amt" type="button" data-v="99">₹99</button>
-   <button class="chip amt" type="button" data-v="199">₹199</button>
-   <button class="chip amt" type="button" data-v="0">Choose in app</button>
-  </div>
-  <a class="donate" id="upiPayBtn" href="#">📲 Pay with any UPI app</a>
-  <div class="qrwrap" id="qrwrap">
-   <img id="upiQr" alt="UPI QR code" width="200" height="200">
-   <p class="scanhint">Scan with GPay / PhonePe / Paytm</p>
-  </div>
-  <button class="copyid" id="copyUpi" type="button">⧉ Copy UPI ID</button>
-  <p class="aware">💜 Around 1 in 300 people worldwide live with schizophrenia. With treatment and support, people live full, productive lives — misunderstanding is the real barrier. <a href="https://www.who.int/news-room/fact-sheets/detail/schizophrenia" target="_blank" rel="noopener">Learn the facts (WHO)</a></p>
- </div>
+<div class="modebar" id="modebar">
+ <button class="chip active" data-mode="single">✨ One screenshot</button>
+ <button class="chip" data-mode="stitch">🧵 Stitch screenshots</button>
+ <button class="chip" data-mode="batch">📑 Batch style</button>
 </div>
 
+<div class="layout">
+ <main id="stage">
+  <div id="home">
+   <h1>Beautiful screenshots, made easy.</h1>
+   <p>Crop, frame, cover private details, or combine scrolling screenshots. Free and made for your phone.</p>
+   <div id="dropzone">
+    <div class="emoji">📸</div>
+    <h2 id="dropTitle">Choose a screenshot</h2>
+    <p id="dropHelp">Upload, drag and drop, or paste an image.</p>
+    <button class="primary" id="chooseBtn">Choose images</button>
+    <p class="note">No account · No ads · Images edited in your browser</p>
+   </div>
+  </div>
+  <canvas id="canvas"></canvas>
+  <input type="file" id="files" accept="image/*" hidden>
+  <input type="file" id="logoFile" accept="image/*" hidden>
+ </main>
+
+ <aside id="controls">
+  <div class="row" id="stitchTools">
+   <label>Long screenshot stitcher</label>
+   <p class="note" id="stitchCount">0 images loaded</p>
+   <button class="chip" id="addStitch">+ Add images</button>
+   <div class="sliderline"><span>Overlap</span><input id="overlap" type="range" min="0" max="60" value="0"><output id="overlapValue">0%</output></div>
+   <p class="note">Trims this percentage from the TOP of every image after the first. Adjust until repeated lines disappear.</p>
+   <button class="primary" id="makeStitch">Generate long image</button>
+  </div>
+
+  <div class="row" id="batchTools">
+   <label>Batch images</label>
+   <p class="note" id="batchCount">0 images loaded</p>
+   <div class="chips">
+    <button class="chip" id="prevBatch">← Previous</button>
+    <button class="chip" id="nextBatch">Next →</button>
+    <button class="chip" id="addBatch">+ Add</button>
+   </div>
+   <button class="primary" id="allBatch" style="margin-top:9px">Download all</button>
+   <p class="note">Your browser may ask permission for multiple downloads.</p>
+  </div>
+
+  <div class="row"><label>One-tap looks</label><div class="chips" id="presets"></div></div>
+  <div class="row"><label>Scene</label><div class="chips" id="scenes">
+   <button class="chip active" data-scene="gradient">Gradient</button>
+   <button class="chip" data-scene="wood">Wood</button>
+   <button class="chip" data-scene="mountain">Mountains</button>
+  </div></div>
+  <div class="row"><label>Gradient</label><div class="swatches" id="swatches"></div></div>
+
+  <div class="row"><label>Frame</label><div class="chips" id="frames">
+   <button class="chip active" data-frame="none">None</button>
+   <button class="chip" data-frame="mac">macOS light</button>
+   <button class="chip" data-frame="dark">macOS dark</button>
+   <button class="chip" data-frame="laptop">Laptop</button>
+   <button class="chip" data-frame="phone">iPhone-style</button>
+  </div></div>
+
+  <div class="row"><label>Crop screenshot</label>
+   <p class="note">Trim the original image before adding the frame. Use + New to choose a different image.</p>
+   <div id="cropSliders"></div>
+   <button class="chip" id="resetCrop">Reset crop</button>
+  </div>
+
+  <div class="row"><label>Caption</label>
+   <input type="text" id="caption" placeholder="Your headline">
+   <div class="chips" id="positions" style="margin:9px 0">
+    <button class="chip active" data-position="top">Top</button>
+    <button class="chip" data-position="bottom">Bottom</button>
+   </div>
+   <div class="sliderline"><span>Text size</span><input id="fontSize" type="range" min="18" max="72" value="42"><output id="fontValue">42</output></div>
+   <div class="chips" id="alignments">
+    <button class="chip" data-align="left">Left</button>
+    <button class="chip active" data-align="center">Center</button>
+    <button class="chip" data-align="right">Right</button>
+    <input type="color" id="textColor" value="#ffffff" aria-label="Caption color">
+   </div>
+  </div>
+
+  <div class="row"><label>Social size</label><div class="chips" id="ratios">
+   <button class="chip active" data-ratio="auto">Auto</button>
+   <button class="chip" data-ratio="1">Square</button>
+   <button class="chip" data-ratio="0.8">4:5</button>
+   <button class="chip" data-ratio="1.7778">16:9</button>
+   <button class="chip" data-ratio="0.5625">Story</button>
+  </div></div>
+
+  <div class="row">
+   <div class="sliderline"><span>Padding</span><input id="pad" type="range" min="0" max="140" value="50"><output id="padValue">50</output></div>
+   <div class="sliderline"><span>Corners</span><input id="corners" type="range" min="0" max="60" value="18"><output id="cornersValue">18</output></div>
+   <div class="sliderline"><span>Shadow</span><input id="shadow" type="range" min="0" max="90" value="35"><output id="shadowValue">35</output></div>
+  </div>
+
+  <div class="row"><label>Cover private details</label>
+   <div class="chips">
+    <button class="chip" id="coverMode">■ Cover mode</button>
+    <button class="chip" id="undoCover">Undo</button>
+    <button class="chip" id="clearCover">Clear</button>
+   </div>
+   <p class="note">Drag a rectangle over private details. It exports as solid black—not reversible pixelation. Check the final download before sharing.</p>
+  </div>
+  <div class="row"><label>Your logo</label>
+   <button class="chip" id="addLogo">+ Add/change logo</button>
+   <button class="chip" id="removeLogo">Remove</button>
+  </div>
+  <div class="actions">
+   <button class="chip" id="copyBtn">Copy</button>
+   <button class="chip" id="downloadBtn">Download</button>
+   <button class="primary" id="shareBtn">Share</button>
+  </div>
+ </aside>
+</div>
+
+<div class="modal" id="modal">
+ <div class="modalbox">
+  <button id="closeModal" aria-label="Close">×</button>
+  <h2>♥ Support SnapFrame</h2>
+  <p>I'm teaching myself to build free tools. SnapFrame is the first — 100% free, no ads, no locked features. Donations go toward keeping my tools free and supporting schizophrenia awareness (a condition 1 in 300 people live with, and one of the most misunderstood illnesses on Earth).</p>
+  <a id="upiLink" class="primary" href="#">Pay with a UPI app</a>
+  <img id="upiQr" width="190" height="190" alt="UPI payment QR code">
+  <button class="chip" id="copyUpi" style="width:100%">Copy UPI ID: puneetfsn@ybl</button>
+  <p class="note">Donations support this independent project and awareness work; this is not a claim that payments go to a registered charity.</p>
+  <p>💜 <a href="https://www.who.int/news-room/fact-sheets/detail/schizophrenia" target="_blank" rel="noopener">Learn about schizophrenia from WHO</a></p>
+ </div>
+</div>
 <div id="toast"></div>
 
 <script>
-/* ============ EDIT THESE TWO LINES ONLY ============ */
-const UPI_ID='puneetfsn@ybl';
-const UPI_NAME='Puneet';
-/* =================================================== */
-
 const $=id=>document.getElementById(id);
-function toast(m){const t=$('toast');if(!t)return;t.textContent=m;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2200);}
-window.addEventListener('error',e=>{toast('⚠ Error: '+e.message);});
-
-const GRADIENTS=[['#667eea','#764ba2'],['#f093fb','#f5576c'],['#4facfe','#00f2fe'],['#43e97b','#38f9d7'],['#fa709a','#fee140'],['#30cfd0','#330867'],['#a8edea','#fed6e3'],['#ff9a9e','#fecfef'],['#0f0c29','#302b63'],['#ff6a00','#ee0979'],['#1e3c72','#2a5298'],['#f5f7fa','#c3cfe2'],['#ffffff','#ffffff'],['#000000','#000000']];
-const PRESETS=[
- {n:'𝕏 Post',v:{ratio:'1.7778',grad:0,pad:50,radius:24,shadow:45,frame:'none'}},
- {n:'LinkedIn',v:{ratio:'1.7778',grad:11,pad:50,radius:20,shadow:35,frame:'none'}},
- {n:'Insta Post',v:{ratio:'0.8',grad:1,pad:70,radius:28,shadow:50,frame:'none'}},
- {n:'Story/Reel',v:{ratio:'0.5625',grad:8,pad:80,radius:28,shadow:50,frame:'none'}},
- {n:'App Launch',v:{ratio:'auto',grad:0,pad:90,radius:32,shadow:60,frame:'mac'}},
- {n:'Chat Clean',v:{ratio:'auto',grad:12,pad:60,radius:24,shadow:25,frame:'phone'}}
-];
-const DEFAULTS={grad:0,pad:60,radius:20,shadow:40,ratio:'auto',frame:'none',caption:'',capPos:'top'};
-const state={...DEFAULTS,img:null,logo:null,blurs:[],blurMode:false};
-try{Object.assign(state,JSON.parse(localStorage.getItem('snapframe-settings')||'{}'));}catch(e){}
-state.img=null;state.logo=null;state.blurs=[];state.blurMode=false;
-
 const canvas=$('canvas'),ctx=canvas.getContext('2d');
-const dropzone=$('dropzone'),fileInput=$('fileInput');
-
-function save(){try{const{img,logo,blurs,blurMode,...rest}=state;localStorage.setItem('snapframe-settings',JSON.stringify(rest));}catch(e){}}
-
-/* ---------- Support modal + UPI ---------- */
-const modal=$('supportModal');
-let amount=0,upiReady=false;
-const isMobile=/Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
-function upiLink(){
- return 'upi://pay?pa='+UPI_ID+'&pn='+encodeURIComponent(UPI_NAME)+'&cu=INR'
-  +(amount?('&am='+amount):'')
-  +'&tn='+encodeURIComponent('SnapFrame donation');
-}
-function refreshUpi(){
- $('upiPayBtn').href=upiLink();
- $('upiQr').src='https://api.qrserver.com/v1/create-qr-code/?size=200x200&margin=8&data='+encodeURIComponent(upiLink());
-}
-if(!isMobile){$('upiPayBtn').style.display='none';}
-$('upiQr').onerror=function first(){
- $('upiQr').onerror=function(){$('qrwrap').style.display='none';};
- $('upiQr').src='upi-qr.png';
+const gradients=[
+ ['#667eea','#764ba2'],['#fa709a','#fee140'],['#4facfe','#00f2fe'],
+ ['#0f0c29','#302b63'],['#43e97b','#38f9d7'],['#f5f7fa','#c3cfe2'],
+ ['#f093fb','#f5576c'],['#1e3c72','#2a5298']
+];
+const state={
+ mode:'single',img:null,stitch:[],batch:[],batchIndex:0,
+ scene:'gradient',grad:0,frame:'none',ratio:'auto',
+ crop:{top:0,bottom:0,left:0,right:0},
+ pad:50,corners:18,shadow:35,caption:'',position:'top',
+ fontSize:42,textColor:'#ffffff',align:'center',
+ logo:null,covers:[],coverMode:false
 };
-document.querySelectorAll('.amt').forEach(b=>{
- b.onclick=()=>{
-  document.querySelectorAll('.amt').forEach(x=>x.classList.remove('active'));
-  b.classList.add('active');amount=+b.dataset.v;refreshUpi();
- };
-});
-function openModal(){modal.classList.add('open');if(!upiReady){upiReady=true;refreshUpi();}}
-$('supportBtn').onclick=openModal;
-$('supportLink').addEventListener('click',e=>{e.preventDefault();e.stopPropagation();openModal();});
-$('closeModal').onclick=()=>modal.classList.remove('open');
-modal.addEventListener('click',e=>{if(e.target===modal)modal.classList.remove('open');});
-document.addEventListener('keydown',e=>{if(e.key==='Escape')modal.classList.remove('open');});
-$('copyUpi').onclick=async()=>{try{await navigator.clipboard.writeText(UPI_ID);toast('UPI ID copied ✓');}catch(e){toast(UPI_ID);}};
+let layout={x:0,y:0,w:1,h:1},drag=null,toastTimer;
 
-/* ---------- Install button ---------- */
-let deferredPrompt;
-window.addEventListener('beforeinstallprompt',e=>{
- e.preventDefault();deferredPrompt=e;$('installBtn').style.display='inline-block';
-});
-$('installBtn').addEventListener('click',async()=>{
- if(deferredPrompt){deferredPrompt.prompt();const{outcome}=await deferredPrompt.userChoice;
-  if(outcome==='accepted')$('installBtn').style.display='none';deferredPrompt=null;}
-});
-
-/* ---------- Image loading (robust) ---------- */
-function isProbablyImage(f){
- if(!f)return false;
- const t=(f.type||'').toLowerCase(),n=(f.name||'').toLowerCase();
- return t.startsWith('image/')||/\.(png|jpe?g|webp|gif|bmp|avif)$/i.test(n)||t==='';
+function notify(text){
+ const el=$('toast');el.textContent=text;el.classList.add('show');
+ clearTimeout(toastTimer);toastTimer=setTimeout(()=>el.classList.remove('show'),2800);
 }
-function handleFile(file){
- if(!file){toast('No file selected');return;}
- if(!isProbablyImage(file)){toast('Please choose an image file');return;}
- const reader=new FileReader();
- reader.onload=function(){
-  const img=new Image();
-  img.onload=function(){
-   state.img=img;state.blurs=[];dragStart=null;dragNow=null;
-   showEditor();render();toast('Screenshot loaded ✓');
-  };
-  img.onerror=function(){toast('Could not read this image. Try PNG or JPG.');};
-  img.src=reader.result;
- };
- reader.onerror=function(){toast('Could not open this file');};
- reader.readAsDataURL(file);
+function rounded(c,x,y,w,h,r){
+ r=Math.min(Math.max(0,r),w/2,h/2);
+ c.beginPath();c.roundRect(x,y,w,h,r);
 }
-function showEditor(){
- document.body.classList.add('editing');
- dropzone.style.display='none';canvas.style.display='block';
- $('controls').style.display='block';$('newBtn').style.display='inline-block';
-}
-function reset(){
- state.img=null;state.blurs=[];dragStart=null;dragNow=null;
- fileInput.value='';state.caption='';$('caption').value='';
- document.body.classList.remove('editing');
- dropzone.style.display='flex';canvas.style.display='none';
- $('controls').style.display='none';$('newBtn').style.display='none';
- save();
-}
-$('chooseBtn').addEventListener('click',e=>{e.stopPropagation();fileInput.value='';fileInput.click();});
-dropzone.addEventListener('click',e=>{
- if(e.target.closest('a,button,label,input'))return;
- fileInput.value='';fileInput.click();
-});
-fileInput.addEventListener('change',e=>{handleFile(e.target.files&&e.target.files[0]);});
-$('newBtn').addEventListener('click',reset);
-['dragenter','dragover'].forEach(ev=>document.addEventListener(ev,e=>{e.preventDefault();dropzone.classList.add('over');}));
-['dragleave','drop'].forEach(ev=>document.addEventListener(ev,e=>{e.preventDefault();dropzone.classList.remove('over');}));
-document.addEventListener('drop',e=>{
- const f=e.dataTransfer&&e.dataTransfer.files&&e.dataTransfer.files[0];
- if(f){handleFile(f);}
-});
-document.addEventListener('paste',e=>{
- const items=e.clipboardData&&e.clipboardData.items;
- if(!items)return;
- for(const item of items){
-  if(item.kind==='file'&&item.type.startsWith('image/')){
-   const f=item.getAsFile();if(f){handleFile(f);break;}
-  }
- }
-});
-$('caption').addEventListener('input',e=>{state.caption=e.target.value;render();save();});
-
-/* ---------- Blur / hide private info ---------- */
-let L={ix:0,iy:0,iw:1,ih:1},dragStart=null,dragNow=null;
-function toImg(e){
- const rc=canvas.getBoundingClientRect();
- const cx=(e.clientX-rc.left)*(canvas.width/rc.width);
- const cy=(e.clientY-rc.top)*(canvas.height/rc.height);
- return{x:Math.min(Math.max(cx-L.ix,0),L.iw),y:Math.min(Math.max(cy-L.iy,0),L.ih)};
-}
-function normRect(a,b){const x=Math.min(a.x,b.x),y=Math.min(a.y,b.y);return{x,y,w:Math.abs(a.x-b.x),h:Math.abs(a.y-b.y)};}
-canvas.addEventListener('pointerdown',e=>{
- if(!state.blurMode||!state.img)return;
- canvas.setPointerCapture(e.pointerId);
- dragStart=toImg(e);dragNow=dragStart;e.preventDefault();
-});
-canvas.addEventListener('pointermove',e=>{if(dragStart){dragNow=toImg(e);render();}});
-function endDrag(){
- if(!dragStart)return;
- const r=normRect(dragStart,dragNow);
- if(r.w>6&&r.h>6)state.blurs.push(r);
- dragStart=null;dragNow=null;render();
-}
-canvas.addEventListener('pointerup',endDrag);
-canvas.addEventListener('pointercancel',endDrag);
-$('blurBtn').onclick=()=>{
- state.blurMode=!state.blurMode;
- $('blurBtn').classList.toggle('active',state.blurMode);
- toast(state.blurMode?'Drag your finger over anything private':'Blur mode off');
-};
-$('blurUndo').onclick=()=>{state.blurs.pop();render();};
-$('blurClear').onclick=()=>{state.blurs=[];render();};
-
-/* ---------- Logo upload ---------- */
-$('logoInput').addEventListener('change',e=>{
- const f=e.target.files&&e.target.files[0];if(!f)return;
- const url=URL.createObjectURL(f);const im=new Image();
- im.onload=()=>{
-  state.logo=im;URL.revokeObjectURL(url);
-  $('logoRemove').style.display='inline-block';$('logoAdd').textContent='Change logo';
-  saveLogo(im);render();
- };
- im.src=url;
-});
-$('logoRemove').onclick=()=>{
- state.logo=null;localStorage.removeItem('snapframe-logo');
- $('logoRemove').style.display='none';$('logoAdd').textContent='+ Add logo';render();
-};
-function saveLogo(im){
- const c=document.createElement('canvas');const s=Math.min(1,256/Math.max(im.naturalWidth,im.naturalHeight));
- c.width=Math.max(1,Math.round(im.naturalWidth*s));c.height=Math.max(1,Math.round(im.naturalHeight*s));
- c.getContext('2d').drawImage(im,0,0,c.width,c.height);
- try{localStorage.setItem('snapframe-logo',c.toDataURL('image/png'));}catch(e){}
-}
-const savedLogo=localStorage.getItem('snapframe-logo');
-if(savedLogo){
- const im=new Image();
- im.onload=()=>{state.logo=im;$('logoRemove').style.display='inline-block';$('logoAdd').textContent='Change logo';};
- im.src=savedLogo;
-}
-
-/* ---------- Controls ---------- */
-const sw=$('swatches');
-GRADIENTS.forEach((g,i)=>{
- const d=document.createElement('div');
- d.className='swatch'+(i===state.grad?' active':'');
- d.style.background='linear-gradient(135deg,'+g[0]+','+g[1]+')';
- d.onclick=()=>{
-  sw.querySelectorAll('.swatch').forEach(x=>x.classList.remove('active'));
-  d.classList.add('active');state.grad=i;render();save();
- };
- sw.appendChild(d);
-});
-PRESETS.forEach(p=>{
- const d=document.createElement('div');d.className='chip';d.textContent=p.n;
- d.onclick=()=>{Object.assign(state,p.v);syncUI();render();save();toast(p.n+' ✓');};
- $('presets').appendChild(d);
-});
-function chipGroup(id,key){
- const el=$(id);
- el.querySelectorAll('.chip').forEach(c=>c.classList.toggle('active',c.dataset.v===String(state[key])));
- el.addEventListener('click',e=>{
-  const c=e.target.closest('.chip');if(!c)return;
-  el.querySelectorAll('.chip').forEach(x=>x.classList.remove('active'));
-  c.classList.add('active');state[key]=c.dataset.v;render();save();
+function activeButtons(parent,attribute,value){
+ document.querySelectorAll('#'+parent+' ['+attribute+']').forEach(b=>{
+  b.classList.toggle('active',b.getAttribute(attribute)===String(value));
  });
 }
-chipGroup('frames','frame');chipGroup('ratios','ratio');chipGroup('capPos','capPos');
-['pad','radius','shadow'].forEach(id=>{
- const el=$(id);el.value=state[id];
- const up=()=>{state[id]=+el.value;$(id+'V').textContent=el.value;if(state.img)render();save();};
- el.addEventListener('input',up);$(id+'V').textContent=state[id];
+function showEditor(){
+ $('home').style.display='none';canvas.style.display='block';
+ $('controls').style.display='block';
+}
+function showHome(){
+ $('home').style.display='block';canvas.style.display='none';
+ $('controls').style.display='none';
+}
+function resetImage(){
+ state.img=null;state.stitch=[];state.batch=[];state.batchIndex=0;
+ state.covers=[];drag=null;state.crop={top:0,bottom:0,left:0,right:0};
+ updateCropUI();updateModeUI();showHome();
+}
+function updateModeUI(){
+ activeButtons('modebar','data-mode',state.mode);
+ $('stitchTools').style.display=state.mode==='stitch'?'block':'none';
+ $('batchTools').style.display=state.mode==='batch'?'block':'none';
+ $('stitchCount').textContent=state.stitch.length+' image(s) loaded';
+ $('batchCount').textContent=state.batch.length
+  ?'Image '+(state.batchIndex+1)+' of '+state.batch.length
+  :'0 images loaded';
+ $('dropTitle').textContent=state.mode==='stitch'
+  ?'Choose 2–4 scrolling screenshots'
+  :state.mode==='batch'?'Choose up to 5 screenshots':'Choose a screenshot';
+ $('dropHelp').textContent=state.mode==='stitch'
+  ?'Choose images in reading order. Adjust overlap after upload.'
+  :state.mode==='batch'?'Apply the same style to every image.':'Upload, drag and drop, or paste an image.';
+ $('files').multiple=state.mode!=='single';
+}
+document.querySelectorAll('[data-mode]').forEach(b=>b.onclick=()=>{
+ if(state.mode===b.dataset.mode)return;
+ state.mode=b.dataset.mode;resetImage();
 });
-$('caption').value=state.caption||'';
+$('newBtn').onclick=resetImage;
+
+function decode(file){
+ return new Promise((resolve,reject)=>{
+  if(!file || (!file.type.startsWith('image/') && !/\.(png|jpe?g|webp|gif|avif)$/i.test(file.name||''))){
+   reject(Error('Please choose PNG, JPG or another supported image.'));return;
+  }
+  const url=URL.createObjectURL(file),im=new Image();
+  im.onload=()=>{URL.revokeObjectURL(url);resolve(im)};
+  im.onerror=()=>{URL.revokeObjectURL(url);reject(Error('Could not open this image. Try PNG or JPG.'))};
+  im.src=url;
+ });
+}
+async function receive(files){
+ const list=Array.from(files||[]);
+ if(!list.length)return;
+ try{
+  if(state.mode==='single'){
+   state.img=await decode(list[0]);state.covers=[];state.crop={top:0,bottom:0,left:0,right:0};
+  }else if(state.mode==='stitch'){
+   if(state.stitch.length+list.length>4)throw Error('Stitch supports up to 4 images. Use + New to start again.');
+   for(const f of list)state.stitch.push(await decode(f));
+   state.img=state.stitch[0];state.covers=[];
+  }else{
+   if(state.batch.length+list.length>5)throw Error('Batch supports up to 5 images.');
+   for(const f of list)state.batch.push(await decode(f));
+   state.batchIndex=state.batch.length-1;
+   state.img=state.batch[state.batchIndex];state.covers=[];
+  }
+  updateCropUI();updateModeUI();showEditor();render();
+  notify(list.length+' image(s) loaded');
+ }catch(err){notify(err.message)}
+}
+const picker=$('files');
+function pick(){picker.value='';picker.click()}
+$('chooseBtn').onclick=e=>{e.stopPropagation();pick()};
+$('dropzone').onclick=e=>{if(e.target.id!=='chooseBtn')pick()};
+$('addStitch').onclick=pick;
+$('addBatch').onclick=pick;
+picker.onchange=e=>receive(e.target.files);
+document.addEventListener('dragover',e=>{e.preventDefault();$('dropzone').classList.add('over')});
+document.addEventListener('dragleave',()=>$('dropzone').classList.remove('over'));
+document.addEventListener('drop',e=>{
+ e.preventDefault();$('dropzone').classList.remove('over');receive(e.dataTransfer.files);
+});
+document.addEventListener('paste',e=>{
+ const images=Array.from(e.clipboardData?.items||[])
+  .filter(i=>i.type.startsWith('image/')).map(i=>i.getAsFile()).filter(Boolean);
+ if(images.length)receive(images);
+});
+
+for(const side of ['top','bottom','left','right']){
+ const line=document.createElement('div');line.className='sliderline';
+ line.innerHTML='<span>'+side[0].toUpperCase()+side.slice(1)+'</span>'+
+  '<input type="range" min="0" max="40" value="0" id="crop-'+side+'">'+
+  '<output id="val-'+side+'">0%</output>';
+ $('cropSliders').append(line);
+ $('crop-'+side).oninput=e=>{
+  state.crop[side]=+e.target.value;$('val-'+side).textContent=e.target.value+'%';render();
+ };
+}
+function updateCropUI(){
+ for(const side of ['top','bottom','left','right']){
+  $('crop-'+side).value=state.crop[side];
+  $('val-'+side).textContent=state.crop[side]+'%';
+ }
+}
+$('resetCrop').onclick=()=>{
+ state.crop={top:0,bottom:0,left:0,right:0};updateCropUI();render();
+};
+
+function changeBatch(n){
+ if(!state.batch.length)return;
+ state.batchIndex=(state.batchIndex+n+state.batch.length)%state.batch.length;
+ state.img=state.batch[state.batchIndex];state.covers=[];
+ updateModeUI();render();
+}
+$('prevBatch').onclick=()=>changeBatch(-1);
+$('nextBatch').onclick=()=>changeBatch(1);
+
+$('overlap').oninput=e=>$('overlapValue').textContent=e.target.value+'%';
+$('makeStitch').onclick=async()=>{
+ if(state.stitch.length<2){notify('Add at least 2 screenshots first');return}
+ try{
+  const images=state.stitch,trim=+$('overlap').value/100;
+  const width=Math.max(...images.map(im=>im.naturalWidth));
+  const heights=images.map((im,i)=>
+   Math.round(im.naturalHeight*(i===0?1:1-trim)*width/im.naturalWidth));
+  const total=heights.reduce((a,b)=>a+b,0);
+  // Bound memory use on phones. Large stitches are resized proportionally.
+  const scale=Math.min(1,4096/total,4096/width,Math.sqrt(7500000/(width*total)));
+  const out=document.createElement('canvas');
+  out.width=Math.max(1,Math.round(width*scale));
+  out.height=Math.max(1,Math.round(total*scale));
+  const c=out.getContext('2d');if(!c)throw Error('This image is too large for this phone.');
+  c.fillStyle='#fff';c.fillRect(0,0,out.width,out.height);
+  let y=0;
+  images.forEach((im,i)=>{
+   const cut=i===0?0:Math.round(im.naturalHeight*trim);
+   const h=Math.round(heights[i]*scale);
+   c.drawImage(im,0,cut,im.naturalWidth,im.naturalHeight-cut,
+    0,y,out.width,h);
+   y+=h;
+  });
+  const blob=await new Promise(resolve=>out.toBlob(resolve,'image/png'));
+  if(!blob)throw Error('Could not create long image. Try smaller screenshots.');
+  state.img=await decode(new File([blob],'stitched.png',{type:'image/png'}));
+  state.covers=[];state.crop={top:0,bottom:0,left:0,right:0};
+  updateCropUI();render();notify('Long image ready ✓');
+ }catch(err){notify(err.message)}
+};
+
+const presets=[
+ ['Clean', {scene:'gradient',grad:5,frame:'none',ratio:'auto',pad:45}],
+ ['Social post',{scene:'gradient',grad:0,frame:'mac',ratio:'1',pad:65}],
+ ['App launch',{scene:'gradient',grad:6,frame:'phone',ratio:'0.8',pad:75}],
+ ['Desk',{scene:'wood',frame:'laptop',ratio:'auto',pad:70}],
+ ['Outdoors',{scene:'mountain',frame:'none',ratio:'1.7778',pad:80}]
+];
+presets.forEach(([name,settings])=>{
+ const b=document.createElement('button');b.className='chip';b.textContent=name;
+ b.onclick=()=>{Object.assign(state,settings);syncUI();render()};
+ $('presets').append(b);
+});
+gradients.forEach((g,i)=>{
+ const b=document.createElement('button');b.className='swatch';
+ b.style.background='linear-gradient(135deg,'+g.join(',')+')';
+ b.title='Gradient '+(i+1);
+ b.onclick=()=>{state.grad=i;state.scene='gradient';syncUI();render()};
+ $('swatches').append(b);
+});
 function syncUI(){
- ['pad','radius','shadow'].forEach(id=>{$(id).value=state[id];$(id+'V').textContent=state[id];});
- document.querySelectorAll('#ratios .chip').forEach(c=>c.classList.toggle('active',c.dataset.v===String(state.ratio)));
- document.querySelectorAll('#frames .chip').forEach(c=>c.classList.toggle('active',c.dataset.v===String(state.frame)));
- document.querySelectorAll('#capPos .chip').forEach(c=>c.classList.toggle('active',c.dataset.v===state.capPos));
- document.querySelectorAll('.swatch').forEach((s,i)=>s.classList.toggle('active',i===state.grad));
+ activeButtons('scenes','data-scene',state.scene);
+ activeButtons('frames','data-frame',state.frame);
+ activeButtons('ratios','data-ratio',state.ratio);
+ activeButtons('positions','data-position',state.position);
+ activeButtons('alignments','data-align',state.align);
+ document.querySelectorAll('.swatch').forEach((b,i)=>b.classList.toggle('active',i===state.grad));
+ for(const id of ['pad','corners','shadow','fontSize']){
+  $(id).value=state[id];$(id==='fontSize'?'fontValue':id+'Value').textContent=state[id];
+ }
+ $('textColor').value=state.textColor;
+}
+for(const [group,attribute,key] of [
+ ['scenes','data-scene','scene'],['frames','data-frame','frame'],
+ ['ratios','data-ratio','ratio'],['positions','data-position','position'],
+ ['alignments','data-align','align']
+]){
+ $(group).onclick=e=>{
+  const b=e.target.closest('['+attribute+']');if(!b)return;
+  state[key]=b.getAttribute(attribute);syncUI();render();
+ };
+}
+for(const id of ['pad','corners','shadow','fontSize']){
+ $(id).oninput=e=>{
+  state[id]=+e.target.value;$(id==='fontSize'?'fontValue':id+'Value').textContent=e.target.value;render();
+ };
+}
+$('caption').oninput=e=>{state.caption=e.target.value;render()};
+$('textColor').oninput=e=>{state.textColor=e.target.value;render()};
+
+$('coverMode').onclick=()=>{
+ state.coverMode=!state.coverMode;
+ $('coverMode').classList.toggle('active',state.coverMode);
+ notify(state.coverMode?'Drag over private information':'Cover mode off');
+};
+$('undoCover').onclick=()=>{state.covers.pop();render()};
+$('clearCover').onclick=()=>{state.covers=[];render()};
+function pointerPosition(e){
+ const r=canvas.getBoundingClientRect();
+ return {
+  x:Math.max(0,Math.min(1,((e.clientX-r.left)*canvas.width/r.width-layout.x)/layout.w)),
+  y:Math.max(0,Math.min(1,((e.clientY-r.top)*canvas.height/r.height-layout.y)/layout.h))
+ };
+}
+canvas.onpointerdown=e=>{
+ if(!state.coverMode||!state.img)return;
+ canvas.setPointerCapture(e.pointerId);
+ drag={start:pointerPosition(e),end:pointerPosition(e)};e.preventDefault();
+};
+canvas.onpointermove=e=>{if(drag){drag.end=pointerPosition(e);render()}};
+canvas.onpointerup=()=>{
+ if(!drag)return;
+ const r=rectFromPoints(drag.start,drag.end);
+ if(r.w>.005&&r.h>.005)state.covers.push(r);
+ drag=null;render();
+};
+canvas.onpointercancel=()=>{drag=null;render()};
+function rectFromPoints(a,b){
+ return{x:Math.min(a.x,b.x),y:Math.min(a.y,b.y),
+  w:Math.abs(a.x-b.x),h:Math.abs(a.y-b.y)};
 }
 
-/* ---------- Drawing engine ---------- */
-function roundRect(c,x,y,w,h,r){
- r=Math.min(r,w/2,h/2);
- c.beginPath();c.moveTo(x+r,y);
- c.arcTo(x+w,y,x+w,y+h,r);c.arcTo(x+w,y+h,x,y+h,r);
- c.arcTo(x,y+h,x,y,r);c.arcTo(x,y,x+w,y,r);c.closePath();
-}
-function pixelate(bx,by,bw,bh){
- bw=Math.round(bw);bh=Math.round(bh);if(bw<2||bh<2)return;
- const t=document.createElement('canvas');
- const s=Math.max(3,Math.round(Math.min(bw,bh)/16));
- t.width=Math.max(1,Math.ceil(bw/s));t.height=Math.max(1,Math.ceil(bh/s));
- const tc=t.getContext('2d');
- tc.drawImage(canvas,bx,by,bw,bh,0,0,t.width,t.height);
- ctx.imageSmoothingEnabled=false;
- ctx.drawImage(t,0,0,t.width,t.height,bx,by,bw,bh);
- ctx.imageSmoothingEnabled=true;
+$('addLogo').onclick=()=>$('logoFile').click();
+$('logoFile').onchange=async e=>{
+ try{
+  const im=await decode(e.target.files[0]);state.logo=im;render();
+  const c=document.createElement('canvas'),scale=Math.min(1,200/Math.max(im.width,im.height));
+  c.width=Math.max(1,Math.round(im.width*scale));
+  c.height=Math.max(1,Math.round(im.height*scale));
+  c.getContext('2d').drawImage(im,0,0,c.width,c.height);
+  try{localStorage.setItem('snapframe-logo',c.toDataURL('image/png'))}catch(_){}
+ }catch(err){notify(err.message)}
+};
+$('removeLogo').onclick=()=>{
+ state.logo=null;localStorage.removeItem('snapframe-logo');render();
+};
+try{
+ const saved=localStorage.getItem('snapframe-logo');
+ if(saved){const im=new Image();im.onload=()=>{state.logo=im;render()};im.src=saved}
+}catch(_){}
+
+function background(c,w,h){
+ if(state.scene==='wood'){
+  c.fillStyle='#a46b42';c.fillRect(0,0,w,h);
+  for(let i=0;i<45;i++){
+   const x=i*w/44;
+   c.strokeStyle=i%3?'#5a321c35':'#eac09466';
+   c.lineWidth=Math.max(1,w*.003*(i%3+1));
+   c.beginPath();c.moveTo(x,0);c.bezierCurveTo(x+w*.02,h*.3,x-w*.015,h*.7,x,h);c.stroke();
+  }
+ }else if(state.scene==='mountain'){
+  const sky=c.createLinearGradient(0,0,0,h);
+  sky.addColorStop(0,'#19305f');sky.addColorStop(.6,'#9ac8d6');sky.addColorStop(1,'#eadcb4');
+  c.fillStyle=sky;c.fillRect(0,0,w,h);
+  c.fillStyle='#e8dfb8';c.beginPath();c.arc(w*.75,h*.25,w*.08,0,Math.PI*2);c.fill();
+  for(const [color,base,peak] of [['#8199a9',.77,.29],['#526d7d',.91,.46],['#344d53',1.03,.62]]){
+   c.fillStyle=color;c.beginPath();c.moveTo(0,h*base);
+   c.lineTo(w*.23,h*peak);c.lineTo(w*.44,h*(base-.12));
+   c.lineTo(w*.66,h*(peak+.04));c.lineTo(w,h*base);
+   c.lineTo(w,h);c.lineTo(0,h);c.fill();
+  }
+ }else{
+  const colors=gradients[state.grad]||gradients[0];
+  const g=c.createLinearGradient(0,0,w,h);
+  g.addColorStop(0,colors[0]);g.addColorStop(1,colors[1]);
+  c.fillStyle=g;c.fillRect(0,0,w,h);
+ }
 }
 function render(){
- const img=state.img;if(!img)return;
- let iw=img.naturalWidth,ih=img.naturalHeight;
- const f=Math.min(1,1800/Math.max(iw,ih));iw=Math.round(iw*f);ih=Math.round(ih*f);
+ const im=state.img;if(!im)return;
+ const sx=Math.round(im.naturalWidth*state.crop.left/100);
+ const sy=Math.round(im.naturalHeight*state.crop.top/100);
+ const sw=Math.max(1,im.naturalWidth-sx-Math.round(im.naturalWidth*state.crop.right/100));
+ const sh=Math.max(1,im.naturalHeight-sy-Math.round(im.naturalHeight*state.crop.bottom/100));
+ const fit=Math.min(1,1500/Math.max(sw,sh));
+ const iw=Math.max(1,Math.round(sw*fit)),ih=Math.max(1,Math.round(sh*fit));
  const k=Math.max(iw,ih)/1000;
- const pad=state.pad*k,radius=state.radius*k,blur=state.shadow*k;
- const borderW=state.frame==='phone'?Math.round(iw*0.04):0;
- const barH=state.frame==='mac'?Math.round(Math.max(28,iw*0.045)):0;
- const cardW=iw+(borderW*2),cardH=ih+barH+(borderW*2);
- const textOffset=state.caption?Math.round(110*k):0;
- let outW=cardW+pad*2,outH=cardH+pad*2+textOffset;
+ const pad=state.pad*k,corner=state.corners*k;
+ const phone=state.frame==='phone',laptop=state.frame==='laptop';
+ const bezel=phone?Math.max(15,iw*.055):laptop?Math.max(12,iw*.025):0;
+ const bar=(state.frame==='mac'||state.frame==='dark')?Math.max(27,iw*.055):0;
+ const bottom=laptop?Math.max(18,iw*.045):bezel;
+ const cardW=iw+bezel*2,cardH=ih+bar+bezel+bottom;
+ const captionSpace=state.caption?Math.max(85*k,state.fontSize*k*2):0;
+ let w=cardW+pad*2,h=cardH+pad*2+captionSpace;
  if(state.ratio!=='auto'){
-  const r=parseFloat(state.ratio);
-  if(outW/outH>r){outH=Math.round(outW/r);}else{outW=Math.round(outH*r);}
+  const ratio=Number(state.ratio);
+  if(w/h>ratio)h=w/ratio;else w=h*ratio;
  }
- canvas.width=Math.round(outW);canvas.height=Math.round(outH);
-
- const g=GRADIENTS[state.grad]||GRADIENTS[0];
- const grad=ctx.createLinearGradient(0,0,outW,outH);
- grad.addColorStop(0,g[0]);grad.addColorStop(1,g[1]);
- ctx.fillStyle=grad;ctx.fillRect(0,0,outW,outH);
-
+ // Additional safety for tall stitched screenshots.
+ const safe=Math.min(1,4096/Math.max(w,h),Math.sqrt(7500000/(w*h)));
+ w=Math.max(1,Math.round(w*safe));h=Math.max(1,Math.round(h*safe));
+ canvas.width=w;canvas.height=h;
+ ctx.setTransform(safe,0,0,safe,0,0);
+ const outW=w/safe,outH=h/safe;
+ background(ctx,outW,outH);
  const x=(outW-cardW)/2;
- const y=((outH-textOffset-cardH)/2)+(state.capPos==='bottom'?0:textOffset);
- L={ix:x+borderW,iy:y+barH+borderW,iw,ih};
+ const y=(outH-cardH-captionSpace)/2+(state.position==='top'?captionSpace:0);
+ const imageX=x+bezel,imageY=y+bezel+bar;
+ layout={x:imageX*safe,y:imageY*safe,w:iw*safe,h:ih*safe};
 
  if(state.caption){
-  ctx.fillStyle='#ffffff';
-  ctx.font='bold '+Math.round(42*k)+'px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
-  ctx.textAlign='center';ctx.textBaseline='alphabetic';
-  const ty=state.capPos==='bottom'?(y+cardH+pad+Math.round(45*k)):(pad+Math.round(45*k));
-  ctx.fillText(state.caption,outW/2,ty);
+  ctx.save();ctx.fillStyle=state.textColor;
+  ctx.font='bold '+Math.max(14,state.fontSize*k)+'px system-ui,sans-serif';
+  ctx.textAlign=state.align;ctx.textBaseline='middle';
+  const tx=state.align==='left'?pad+15*k:state.align==='right'?outW-pad-15*k:outW/2;
+  const ty=state.position==='top'?y-captionSpace/2:y+cardH+captionSpace/2;
+  ctx.fillText(state.caption,tx,ty,Math.max(50,outW-pad*2-25*k));ctx.restore();
  }
-
- if(blur>0){
-  ctx.save();
-  ctx.shadowColor='rgba(0,0,0,.45)';ctx.shadowBlur=blur;ctx.shadowOffsetY=blur*.4;
-  ctx.fillStyle='#000';
-  roundRect(ctx,x,y,cardW,cardH,state.frame==='phone'?radius*1.5:radius);
-  ctx.fill();ctx.restore();
- }
+ ctx.save();
+ ctx.shadowColor='#0008';ctx.shadowBlur=state.shadow*k;
+ ctx.shadowOffsetY=state.shadow*k*.3;
+ ctx.fillStyle=phone?'#111':laptop?'#252631':state.frame==='dark'?'#25252b':'#e8e8ee';
+ rounded(ctx,x,y,cardW,cardH,phone?corner*2:corner);ctx.fill();
+ ctx.restore();
 
  ctx.save();
- if(state.frame==='phone'){
-  roundRect(ctx,x,y,cardW,cardH,radius*1.5);ctx.clip();
-  ctx.fillStyle='#0c0c0e';ctx.fillRect(x,y,cardW,cardH);
-  const diW=cardW*0.28,diH=cardH*0.03,diX=x+(cardW-diW)/2,diY=y+(cardH*0.02);
-  ctx.fillStyle='#000';roundRect(ctx,diX,diY,diW,diH,diH/2);ctx.fill();
- }else{
-  roundRect(ctx,x,y,cardW,cardH,radius);ctx.clip();
+ rounded(ctx,x,y,cardW,cardH,phone?corner*2:corner);ctx.clip();
+ if(phone||laptop){
+  ctx.fillStyle='#17181d';ctx.fillRect(x,y,cardW,cardH);
  }
- if(barH){
-  ctx.fillStyle='#ececf1';ctx.fillRect(x,y,cardW,barH);
-  const r=barH*.17,cy=y+barH/2;
-  ['#ff5f57','#febc2e','#28c840'].forEach((c,i)=>{
-   ctx.fillStyle=c;ctx.beginPath();
-   ctx.arc(x+barH*.55+i*r*2.9,cy,r,0,Math.PI*2);ctx.fill();
+ if(bar){
+  ctx.fillStyle=state.frame==='dark'?'#303039':'#f1f1f4';
+  ctx.fillRect(x,y,cardW,bar);
+  ['#ff605c','#ffbd44','#00ca4e'].forEach((color,i)=>{
+   ctx.fillStyle=color;ctx.beginPath();
+   ctx.arc(x+bar*.55+i*bar*.4,y+bar/2,bar*.12,0,Math.PI*2);ctx.fill();
   });
  }
- ctx.drawImage(img,x+borderW,y+barH+borderW,iw,ih);
+ ctx.drawImage(im,sx,sy,sw,sh,imageX,imageY,iw,ih);
  ctx.restore();
-
- state.blurs.forEach(r=>pixelate(L.ix+r.x,L.iy+r.y,r.w,r.h));
- if(dragStart&&dragNow){
-  const r=normRect(dragStart,dragNow);
-  if(r.w>2&&r.h>2){
-   pixelate(L.ix+r.x,L.iy+r.y,r.w,r.h);
-   ctx.save();ctx.strokeStyle='#fff';ctx.lineWidth=2;ctx.setLineDash([6,5]);
-   ctx.strokeRect(L.ix+r.x,L.iy+r.y,r.w,r.h);ctx.restore();
-  }
+ if(phone){
+  ctx.fillStyle='#050506';rounded(ctx,x+cardW*.36,y+bezel*.2,cardW*.28,bezel*.7,bezel*.35);ctx.fill();
  }
-
- ctx.save();
- ctx.font='600 '+Math.round(26*k)+'px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
- const label='SnapFrame';
- const tw=ctx.measureText(label).width;
- const pw=tw+34*k,ph=44*k,px=outW-24*k-pw,py=outH-24*k-ph;
- ctx.fillStyle='rgba(0,0,0,.35)';roundRect(ctx,px,py,pw,ph,ph/2);ctx.fill();
- ctx.fillStyle='#fff';ctx.textAlign='center';ctx.textBaseline='middle';
- ctx.fillText(label,px+pw/2,py+ph/2+1);
- ctx.restore();
-
+ if(laptop){
+  ctx.fillStyle='#b9bbc4';
+  rounded(ctx,x-cardW*.06,y+cardH-3*k,cardW*1.12,Math.max(12*k,bottom*.75),8*k);ctx.fill();
+  ctx.fillStyle='#858892';
+  rounded(ctx,x+cardW*.38,y+cardH-2*k,cardW*.24,Math.max(3*k,bottom*.17),3*k);ctx.fill();
+ }
+ // Solid covers are drawn AFTER the screenshot, so source pixels are not visible in exported areas.
+ const covers=drag?[...state.covers,rectFromPoints(drag.start,drag.end)]:state.covers;
+ ctx.fillStyle='#09090b';
+ covers.forEach(r=>{
+  ctx.fillRect(imageX+r.x*iw,imageY+r.y*ih,r.w*iw,r.h*ih);
+ });
  if(state.logo){
-  const lh=64*k,lw=state.logo.naturalWidth/state.logo.naturalHeight*lh;
-  ctx.drawImage(state.logo,24*k,outH-24*k-lh,lw,lh);
+  const lh=Math.max(18,45*k),lw=lh*state.logo.naturalWidth/state.logo.naturalHeight;
+  ctx.drawImage(state.logo,pad+12*k,outH-pad-lh-12*k,lw,lh);
  }
 }
 
-/* ---------- Export ---------- */
-function getBlob(){return new Promise(r=>canvas.toBlob(r,'image/png'));}
-async function downloadCanvas(){
- const b=await getBlob();if(!b){toast('Nothing to save yet');return;}
- const a=document.createElement('a');
- a.href=URL.createObjectURL(b);a.download='snapframe.png';
- document.body.appendChild(a);a.click();a.remove();
- setTimeout(()=>URL.revokeObjectURL(a.href),2000);toast('Saved ✓');
+function blobOf(c){return new Promise(resolve=>c.toBlob(resolve,'image/png'))}
+async function downloadBlob(blob,name){
+ if(!blob){notify('Could not export. Try smaller images.');return}
+ const url=URL.createObjectURL(blob),a=document.createElement('a');
+ a.href=url;a.download=name;document.body.append(a);a.click();a.remove();
+ setTimeout(()=>URL.revokeObjectURL(url),10000);
 }
-async function shareCanvas(){
- const b=await getBlob();if(!b){toast('Load a screenshot first');return;}
- const file=new File([b],'snapframe.png',{type:'image/png'});
- if(navigator.canShare&&navigator.canShare({files:[file]})){
-  try{await navigator.share({files:[file],title:'SnapFrame'});}catch(e){}
- }else{downloadCanvas();}
-}
-async function copyCanvas(){
+$('downloadBtn').onclick=async()=>{
+ if(!state.img)return notify('Choose an image first');
+ await downloadBlob(await blobOf(canvas),'snapframe.png');notify('Download started ✓');
+};
+$('copyBtn').onclick=async()=>{
  try{
-  const b=await getBlob();if(!b){toast('Load a screenshot first');return;}
-  await navigator.clipboard.write([new ClipboardItem({'image/png':b})]);
-  toast('Copied ✓');
- }catch(e){toast('Copy not supported — use Download');}
-}
+  const blob=await blobOf(canvas);
+  if(!blob)throw Error();
+  await navigator.clipboard.write([new ClipboardItem({'image/png':blob})]);
+  notify('Copied ✓');
+ }catch(_){notify('Copy unavailable here; use Download')}
+};
+$('shareBtn').onclick=async()=>{
+ try{
+  const blob=await blobOf(canvas);
+  if(!blob)throw Error();
+  const file=new File([blob],'snapframe.png',{type:'image/png'});
+  if(navigator.canShare?.({files:[file]}))await navigator.share({files:[file]});
+  else await downloadBlob(blob,'snapframe.png');
+ }catch(err){if(err.name!=='AbortError')notify('Sharing unavailable; use Download')}
+};
+$('allBatch').onclick=async()=>{
+ if(!state.batch.length)return notify('Add batch images first');
+ const original=state.img,index=state.batchIndex,covers=state.covers;
+ notify('Downloading '+state.batch.length+' files...');
+ for(let i=0;i<state.batch.length;i++){
+  state.img=state.batch[i];state.covers=[];render();
+  await downloadBlob(await blobOf(canvas),'snapframe-'+(i+1)+'.png');
+  await new Promise(resolve=>setTimeout(resolve,350));
+ }
+ state.img=original;state.batchIndex=index;state.covers=covers;render();
+};
 
-if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});
+// Voluntary UPI support
+const upi='upi://pay?pa=puneetfsn%40ybl&pn=Puneet&cu=INR&tn=SnapFrame%20support';
+$('upiLink').href=upi;
+$('upiQr').src='https://api.qrserver.com/v1/create-qr-code/?size=190x190&data='+encodeURIComponent(upi);
+$('upiQr').onerror=()=>$('upiQr').style.display='none';
+$('supportBtn').onclick=()=>$('modal').classList.add('open');
+$('closeModal').onclick=()=>$('modal').classList.remove('open');
+$('modal').onclick=e=>{if(e.target===$('modal'))$('modal').classList.remove('open')};
+$('copyUpi').onclick=async()=>{
+ try{await navigator.clipboard.writeText('puneetfsn@ybl');notify('UPI ID copied ✓')}
+ catch(_){notify('UPI ID: puneetfsn@ybl')}
+};
+let installPrompt;
+window.addEventListener('beforeinstallprompt',e=>{
+ e.preventDefault();installPrompt=e;$('installBtn').style.display='block';
+});
+$('installBtn').onclick=async()=>{
+ if(!installPrompt)return;
+ await installPrompt.prompt();installPrompt=null;
+ $('installBtn').style.display='none';
+};
+window.addEventListener('appinstalled',()=>$('installBtn').style.display='none');
+if('serviceWorker' in navigator)navigator.serviceWorker.register('./sw.js').catch(()=>{});
+syncUI();updateModeUI();
 </script>
 </body>
 </html>
