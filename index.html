@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>SnapFrame – Beautify Screenshots on Your Phone</title>
+<meta name="description" content="Turn ugly screenshots into beautiful social media images in 10 seconds. Built for mobile.">
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#111118">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="apple-touch-icon" href="icon.png">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;background:#111118;color:#eee;height:100dvh;display:grid;grid-template-rows:auto 1fr auto;overflow:hidden}
+header{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid #222}
+header h1{font-size:18px;font-weight:700}
+header h1 span{color:#8b5cf6}
+#newBtn{background:none;border:1px solid #333;color:#aaa;padding:6px 12px;border-radius:8px;font-size:13px;cursor:pointer;display:none}
+#preview{display:flex;align-items:center;justify-content:center;padding:16px;min-height:0;overflow:hidden}
+#canvas{max-width:100%;max-height:100%;border-radius:8px;box-shadow:0 10px 40px rgba(0,0,0,.5);display:none}
+#dropzone{border:2px dashed #444;border-radius:16px;padding:40px 24px;text-align:center;cursor:pointer;max-width:360px;width:100%}
+#dropzone.over{border-color:#8b5cf6;background:rgba(139,92,246,.08)}
+#dropzone .big{font-size:44px;margin-bottom:10px}
+#dropzone h2{font-size:17px;margin-bottom:6px}
+#dropzone p{color:#aaa;font-size:13px;line-height:1.5}
+#controls{background:#1a1a24;border-top:1px solid #222;padding:12px 16px calc(12px + env(safe-area-inset-bottom));max-height:46vh;overflow-y:auto;display:none}
+.row{margin-bottom:14px}
+.row label{display:flex;justify-content:space-between;font-size:11px;color:#aaa;margin-bottom:6px;text-transform:uppercase;letter-spacing:.6px}
+input[type=range]{width:100%;accent-color:#8b5cf6}
+.swatches{display:flex;gap:8px;overflow-x:auto;padding:2px 0 4px}
+.swatch{flex:0 0 40px;height:40px;border-radius:50%;border:3px solid transparent;cursor:pointer}
+.swatch.active{border-color:#fff}
+.chips{display:flex;gap:8px;flex-wrap:wrap}
+.chip{padding:7px 12px;border-radius:20px;background:#2a2a38;font-size:13px;cursor:pointer;border:1px solid transparent;user-select:none}
+.chip.active{background:#8b5cf6;border-color:#a78bfa}
+.actions{display:flex;gap:8px;margin-top:4px}
+.btn{flex:1;padding:14px 8px;border:none;border-radius:12px;font-size:15px;font-weight:600;cursor:pointer}
+.btn.primary{background:#8b5cf6;color:#fff}
+.btn.secondary{background:#2a2a38;color:#eee}
+#toast{position:fixed;top:70px;left:50%;transform:translateX(-50%);background:#8b5cf6;color:#fff;padding:10px 18px;border-radius:10px;font-size:14px;opacity:0;transition:.3s;pointer-events:none}
+#toast.show{opacity:1}
+@media(min-width:900px){
+ body{grid-template-columns:1fr 340px;grid-template-rows:auto 1fr}
+ header{grid-column:1/3}
+ #controls{max-height:none;border-top:none;border-left:1px solid #222}
+}
+</style>
+</head>
+<body>
+
+<header>
+ <h1>📸 Snap<span>Frame</span></h1>
+ <button id="newBtn">+ New</button>
+</header>
+
+<main id="preview">
+ <div id="dropzone">
+  <div class="big">🖼️</div>
+  <h2>Tap to pick a screenshot</h2>
+  <p>or drag &amp; drop here<br>or press <b>Ctrl+V / ⌘V</b> to paste</p>
+ </div>
+ <canvas id="canvas"></canvas>
+ <input type="file" id="fileInput" accept="image/*" hidden>
+</main>
+
+<section id="controls">
+ <div class="row"><label>Background</label><div class="swatches" id="swatches"></div></div>
+ <div class="row"><label>Frame</label>
+  <div class="chips" id="frames">
+   <div class="chip active" data-v="none">None</div>
+   <div class="chip" data-v="mac">macOS Light</div>
+   <div class="chip" data-v="dark">macOS Dark</div>
+  </div>
+ </div>
+ <div class="row"><label>Size</label>
+  <div class="chips" id="ratios">
+   <div class="chip active" data-v="auto">Auto</div>
+   <div class="chip" data-v="1">1:1 Post</div>
+   <div class="chip" data-v="0.8">4:5 Insta</div>
+   <div class="chip" data-v="1.7778">16:9 X</div>
+   <div class="chip" data-v="0.5625">9:16 Story</div>
+  </div>
+ </div>
+ <div class="row"><label>Padding <span id="padV"></span></label><input type="range" id="pad" min="0" max="200" value="60"></div>
+ <div class="row"><label>Corners <span id="radiusV"></span></label><input type="range" id="radius" min="0" max="80" value="20"></div>
+ <div class="row"><label>Shadow <span id="shadowV"></span></label><input type="range" id="shadow" min="0" max="100" value="40"></div>
+ <div class="actions">
+  <button class="btn secondary" id="copyBtn">Copy</button>
+  <button class="btn secondary" id="dlBtn">Download</button>
+  <button class="btn primary" id="shareBtn">Share</button>
+ </div>
+</section>
+
+<div id="toast"></div>
+
+<script>
+const GRADIENTS=[
+ ['#667eea','#764ba2'],['#f093fb','#f5576c'],['#4facfe','#00f2fe'],['#43e97b','#38f9d7'],
+ ['#fa709a','#fee140'],['#30cfd0','#330867'],['#a8edea','#fed6e3'],['#ff9a9e','#fecfef'],
+ ['#0f0c29','#302b63'],['#ff6a00','#ee0979'],['#1e3c72','#2a5298'],['#f5f7fa','#c3cfe2'],
+ ['#ffffff','#ffffff'],['#000000','#000000']
+];
+const state={img:null,grad:0,pad:60,radius:20,shadow:40,ratio:'auto',frame:'none'};
+const $=id=>document.getElementById(id);
+const canvas=$('canvas'),ctx=canvas.getContext('2d');
+const dropzone=$('dropzone'),fileInput=$('fileInput');
+
+/* ---------- Load image ---------- */
+function loadFile(file){
+ if(!file||!file.type.startsWith('image/'))return;
+ const url=URL.createObjectURL(file);
+ const img=new Image();
+ img.onload=()=>{state.img=img;URL.revokeObjectURL(url);showEditor();render();};
+ img.src=url;
+}
+function showEditor(){dropzone.style.display='none';canvas.style.display='block';$('controls').style.display='block';$('newBtn').style.display='block';}
+function reset(){state.img=null;fileInput.value='';dropzone.style.display='block';canvas.style.display='none';$('controls').style.display='none';$('newBtn').style.display='none';}
+
+dropzone.addEventListener('click',()=>fileInput.click());
+fileInput.addEventListener('change',e=>loadFile(e.target.files[0]));
+$('newBtn').addEventListener('click',reset);
+['dragenter','dragover'].forEach(ev=>document.addEventListener(ev,e=>{e.preventDefault();dropzone.classList.add('over');}));
+['dragleave','drop'].forEach(ev=>document.addEventListener(ev,e=>{e.preventDefault();dropzone.classList.remove('over');}));
+document.addEventListener('drop',e=>loadFile(e.dataTransfer.files[0]));
+document.addEventListener('paste',e=>{
+ for(const item of e.clipboardData.items){if(item.type.startsWith('image/')){loadFile(item.getAsFile());break;}}
+});
+
+/* ---------- Controls ---------- */
+const sw=$('swatches');
+GRADIENTS.forEach((g,i)=>{
+ const d=document.createElement('div');d.className='swatch'+(i===0?' active':'');
+ d.style.background=`linear-gradient(135deg,${g[0]},${g[1]})`;
+ d.onclick=()=>{sw.querySelectorAll('.swatch').forEach(x=>x.classList.remove('active'));d.classList.add('active');state.grad=i;render();};
+ sw.appendChild(d);
+});
+function chipGroup(id,key){
+ const el=$(id);
+ el.addEventListener('click',e=>{const c=e.target.closest('.chip');if(!c)return;
+  el.querySelectorAll('.chip').forEach(x=>x.classList.remove('active'));c.classList.add('active');state[key]=c.dataset.v;render();});
+}
+chipGroup('frames','frame');chipGroup('ratios','ratio');
+['pad','radius','shadow'].forEach(id=>{
+ const el=$(id);const up=()=>{state[id]=+el.value;$(id+'V').textContent=el.value;render();};
+ el.addEventListener('input',up);up();
+});
+
+/* ---------- Drawing engine ---------- */
+function roundRect(c,x,y,w,h,r){
+ r=Math.min(r,w/2,h/2);c.beginPath();c.moveTo(x+r,y);
+ c.arcTo(x+w,y,x+w,y+h,r);c.arcTo(x+w,y+h,x,y+h,r);c.arcTo(x,y+h,x,y,r);c.arcTo(x,y,x+w,y,r);c.closePath();
+}
+function render(){
+ const img=state.img;if(!img)return;
+ let iw=img.naturalWidth,ih=img.naturalHeight;
+ const f=Math.min(1,1800/Math.max(iw,ih));iw=Math.round(iw*f);ih=Math.round(ih*f);
+ const k=Math.max(iw,ih)/1000;
+ const pad=state.pad*k,radius=state.radius*k,blur=state.shadow*k;
+ const barH=state.frame==='none'?0:Math.round(Math.max(28,iw*0.045));
+ const cardW=iw,cardH=ih+barH;
+ let outW=cardW+pad*2,outH=cardH+pad*2;
+ if(state.ratio!=='auto'){const r=parseFloat(state.ratio);
+  if(outW/outH>r)outH=outW/r;else outW=outH*r;}
+ canvas.width=Math.round(outW);canvas.height=Math.round(outH);
+
+ // background
+ const g=GRADIENTS[state.grad];
+ const grad=ctx.createLinearGradient(0,0,outW,outH);grad.addColorStop(0,g[0]);grad.addColorStop(1,g[1]);
+ ctx.fillStyle=grad;ctx.fillRect(0,0,outW,outH);
+
+ const x=(outW-cardW)/2,y=(outH-cardH)/2;
+
+ // shadow
+ if(blur>0){ctx.save();ctx.shadowColor='rgba(0,0,0,.45)';ctx.shadowBlur=blur;ctx.shadowOffsetY=blur*.4;
+  ctx.fillStyle='#000';roundRect(ctx,x,y,cardW,cardH,radius);ctx.fill();ctx.restore();}
+
+ // card
+ ctx.save();roundRect(ctx,x,y,cardW,cardH,radius);ctx.clip();
+ if(barH){
+  ctx.fillStyle=state.frame==='dark'?'#2b2b30':'#ececf1';ctx.fillRect(x,y,cardW,barH);
+  const r=barH*.17,cy=y+barH/2;
+  ['#ff5f57','#febc2e','#28c840'].forEach((c,i)=>{ctx.fillStyle=c;ctx.beginPath();ctx.arc(x+barH*.55+i*r*2.9,cy,r,0,Math.PI*2);ctx.fill();});
+ }
+ ctx.drawImage(img,x,y+barH,iw,ih);
+ ctx.restore();
+}
+
+/* ---------- Export ---------- */
+let tt;function toast(m){const t=$('toast');t.textContent=m;t.classList.add('show');clearTimeout(tt);tt=setTimeout(()=>t.classList.remove('show'),1800);}
+const getBlob=()=>new Promise(r=>canvas.toBlob(r,'image/png'));
+async function download(){
+ const b=await getBlob();const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='snapframe.png';
+ document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),2000);toast('Saved ✓');
+}
+async function share(){
+ const b=await getBlob();const file=new File([b],'snapframe.png',{type:'image/png'});
+ if(navigator.canShare&&navigator.canShare({files:[file]})){try{await navigator.share({files:[file],title:'SnapFrame'});}catch(e){}}
+ else download();
+}
+async function copy(){
+ try{const b=await getBlob();await navigator.clipboard.write([new ClipboardItem({'image/png':b})]);toast('Copied ✓');}
+ catch(e){toast('Copy not supported here – use Download');}
+}
+$('dlBtn').onclick=download;$('shareBtn').onclick=share;$('copyBtn').onclick=copy;
+
+if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});
+</script>
+</body>
+</html>
