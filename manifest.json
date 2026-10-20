@@ -10,7 +10,13 @@
   "theme_color": "#111118",
   "icons": [
     {
-      "src": "/snapframe/Icon.png",
+      "src": "/snapframe/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/snapframe/icon-512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any"
