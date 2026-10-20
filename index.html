@@ -68,6 +68,269 @@ input[type=range]{width:100%;accent-color:#8b5cf6}
  header{grid-column:1/3}
  #controls{max-height:none;border-top:none;border-left:1px solid #222}
 }
+/* ===== SnapFrame polished layout update ===== */
+
+body{
+  background:
+    radial-gradient(circle at 50% 28%,rgba(139,92,246,.14),transparent 30%),
+    radial-gradient(circle at 20% 80%,rgba(79,70,229,.08),transparent 28%),
+    #0f0f16;
+}
+
+/* Cleaner glass-effect header */
+header{
+  min-height:64px;
+  padding:12px 22px;
+  background:rgba(15,15,22,.86);
+  backdrop-filter:blur(14px);
+  -webkit-backdrop-filter:blur(14px);
+  border-bottom:1px solid rgba(255,255,255,.07);
+}
+
+.logo-img{
+  width:36px;
+  height:36px;
+  border-radius:10px;
+  border:1px solid rgba(255,255,255,.15);
+  box-shadow:0 5px 18px rgba(0,0,0,.35);
+}
+
+header h1{
+  font-size:20px;
+}
+
+#supportBtn,
+#installBtn,
+#newBtn{
+  min-height:38px;
+  padding:8px 14px;
+  border-radius:10px;
+  transition:transform .18s ease,background .18s ease,box-shadow .18s ease;
+}
+
+#supportBtn:hover,
+#installBtn:hover,
+#newBtn:hover{
+  transform:translateY(-1px);
+}
+
+#installBtn{
+  box-shadow:0 7px 20px rgba(139,92,246,.25);
+}
+
+/* Properly center the opening screen */
+#preview{
+  width:100%;
+  min-height:0;
+  padding:32px 20px;
+  position:relative;
+}
+
+/* Improved upload card */
+#dropzone{
+  max-width:560px;
+  width:min(560px,94vw);
+  padding:56px 32px;
+  border:1px solid rgba(255,255,255,.13);
+  border-radius:26px;
+  background:
+    linear-gradient(145deg,rgba(255,255,255,.055),rgba(255,255,255,.018));
+  box-shadow:
+    0 30px 90px rgba(0,0,0,.34),
+    inset 0 1px 0 rgba(255,255,255,.06);
+  position:relative;
+  overflow:hidden;
+  transition:
+    transform .22s ease,
+    border-color .22s ease,
+    box-shadow .22s ease;
+}
+
+#dropzone::before{
+  content:"✨ BEAUTIFY SCREENSHOTS IN SECONDS";
+  display:inline-block;
+  margin-bottom:26px;
+  padding:7px 12px;
+  border:1px solid rgba(167,139,250,.25);
+  border-radius:999px;
+  background:rgba(139,92,246,.1);
+  color:#bda8ff;
+  font-size:10px;
+  font-weight:800;
+  letter-spacing:1.1px;
+}
+
+#dropzone::after{
+  content:"";
+  position:absolute;
+  width:190px;
+  height:190px;
+  top:-100px;
+  right:-70px;
+  border-radius:50%;
+  background:rgba(139,92,246,.12);
+  filter:blur(12px);
+  pointer-events:none;
+}
+
+#dropzone:hover{
+  transform:translateY(-3px);
+  border-color:rgba(167,139,250,.5);
+  box-shadow:
+    0 36px 100px rgba(0,0,0,.42),
+    0 0 0 1px rgba(139,92,246,.08);
+}
+
+#dropzone.over{
+  transform:scale(1.015);
+  border-color:#a78bfa;
+  background:rgba(139,92,246,.1);
+}
+
+#dropzone .big{
+  font-size:60px;
+  line-height:1;
+  margin-bottom:20px;
+  filter:drop-shadow(0 8px 20px rgba(0,0,0,.35));
+}
+
+#dropzone h2{
+  font-size:25px;
+  margin-bottom:12px;
+  letter-spacing:-.5px;
+}
+
+#dropzone p{
+  color:#9b9bab;
+  font-size:14px;
+  line-height:1.7;
+}
+
+#dropzone p b{
+  color:#d6d6df;
+}
+
+.free-line{
+  margin-top:22px !important;
+  padding-top:18px;
+  border-top:1px solid rgba(255,255,255,.07);
+  color:#777788 !important;
+}
+
+.free-line a{
+  color:#a78bfa;
+}
+
+/* Cleaner editor panel */
+#controls{
+  background:rgba(20,20,30,.96);
+  border-color:rgba(255,255,255,.07);
+}
+
+.row{
+  padding-bottom:14px;
+  margin-bottom:16px;
+  border-bottom:1px solid rgba(255,255,255,.055);
+}
+
+.row:last-child{
+  border-bottom:none;
+}
+
+.chip{
+  transition:transform .16s ease,background .16s ease;
+}
+
+.chip:hover{
+  transform:translateY(-1px);
+  background:#343447;
+}
+
+.chip.active{
+  box-shadow:0 5px 15px rgba(139,92,246,.2);
+}
+
+/* Desktop: use one centered column until editor opens */
+@media(min-width:900px){
+  body{
+    grid-template-columns:minmax(0,1fr);
+    grid-template-rows:auto minmax(0,1fr);
+  }
+
+  header{
+    grid-column:1;
+  }
+
+  /* Switch to preview + sidebar only after a screenshot is loaded */
+  body:has(#controls[style*="display: block"]){
+    grid-template-columns:minmax(0,1fr) 380px;
+  }
+
+  body:has(#controls[style*="display: block"]) header{
+    grid-column:1 / 3;
+  }
+
+  body:has(#controls[style*="display: block"]) #controls{
+    grid-column:2;
+    grid-row:2;
+    display:block;
+    max-height:calc(100dvh - 64px);
+    border-left:1px solid rgba(255,255,255,.07);
+    border-top:none;
+  }
+}
+
+/* Mobile adjustments */
+@media(max-width:600px){
+  header{
+    min-height:58px;
+    padding:10px 12px;
+  }
+
+  .logo-img{
+    width:32px;
+    height:32px;
+  }
+
+  header h1{
+    font-size:17px;
+  }
+
+  #supportBtn,
+  #installBtn,
+  #newBtn{
+    min-height:34px;
+    padding:7px 9px;
+    font-size:11px;
+  }
+
+  #preview{
+    padding:20px 14px;
+  }
+
+  #dropzone{
+    width:100%;
+    padding:38px 20px;
+    border-radius:22px;
+  }
+
+  #dropzone::before{
+    margin-bottom:20px;
+    font-size:9px;
+  }
+
+  #dropzone .big{
+    font-size:50px;
+  }
+
+  #dropzone h2{
+    font-size:21px;
+  }
+
+  #dropzone:hover{
+    transform:none;
+  }
+}
 </style>
 </head>
 <body>
