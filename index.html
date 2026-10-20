@@ -4,20 +4,22 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>SnapFrame – Beautify Screenshots</title>
-<meta name="description" content="Turn ugly screenshots into beautiful social media images.">
+<link rel="manifest" href="./manifest.json">
+<link rel="apple-touch-icon" href="./icon.png">
+<link rel="icon" type="image/png" href="./icon.png">
 <meta name="theme-color" content="#111118">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<!-- THIS IS THE FIX FOR YOUR ICON -->
-<link rel="apple-touch-icon" href="icon.png">
-<link rel="icon" type="image/png" href="icon.png">
-<link rel="manifest" href="manifest.json">
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;background:#111118;color:#eee;height:100dvh;display:grid;grid-template-rows:auto 1fr auto;overflow:hidden}
-header{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid #222}
-header h1{font-size:18px;font-weight:700}
+header{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid #222;background:#111118}
+.logo-area{display:flex;align-items:center;gap:10px}
+.logo-img{width:28px;height:28px;border-radius:7px;object-fit:cover;border:1px solid #333}
+header h1{font-size:18px;font-weight:700;letter-spacing:-0.5px}
 header h1 span{color:#8b5cf6}
+.header-btns{display:flex;gap:8px;align-items:center}
+#installBtn{background:#8b5cf6;border:none;color:#fff;padding:6px 12px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;display:none}
 #newBtn{background:none;border:1px solid #333;color:#aaa;padding:6px 12px;border-radius:8px;font-size:13px;cursor:pointer;display:none}
 #preview{display:flex;align-items:center;justify-content:center;padding:16px;min-height:0;overflow:hidden}
 #canvas{max-width:100%;max-height:100%;border-radius:8px;box-shadow:0 10px 40px rgba(0,0,0,.5);display:none}
@@ -28,9 +30,10 @@ header h1 span{color:#8b5cf6}
 #dropzone p{color:#aaa;font-size:13px;line-height:1.5}
 #controls{background:#1a1a24;border-top:1px solid #222;padding:12px 16px calc(12px + env(safe-area-inset-bottom));max-height:46vh;overflow-y:auto;display:none}
 .row{margin-bottom:14px}
-.row label{display:flex;justify-content:space-between;font-size:11px;color:#aaa;margin-bottom:6px;text-transform:uppercase;letter-spacing:.6px}
+.row label{display:flex;justify-content:space-between;font-size:11px;color:#aaa;margin-bottom:6px;text-transform:uppercase;letter-spacing:.6px;font-weight:600}
 input[type=range]{width:100%;accent-color:#8b5cf6}
-input[type=text]{width:100%;padding:10px;background:#2a2a38;border:1px solid #333;color:#fff;border-radius:8px;font-size:14px}
+.text-input{width:100%;background:#2a2a38;border:1px solid #3a3a4e;color:#fff;padding:10px;border-radius:8px;font-size:14px;outline:none;transition:border-color 0.2s}
+.text-input:focus{border-color:#8b5cf6}
 .swatches{display:flex;gap:8px;overflow-x:auto;padding:2px 0 4px}
 .swatch{flex:0 0 40px;height:40px;border-radius:50%;border:3px solid transparent;cursor:pointer}
 .swatch.active{border-color:#fff}
@@ -53,13 +56,19 @@ input[type=text]{width:100%;padding:10px;background:#2a2a38;border:1px solid #33
 <body>
 
 <header>
- <h1>📸 Snap<span>Frame</span></h1>
- <button id="newBtn">+ New</button>
+ <div class="logo-area">
+  <img src="icon.png" class="logo-img" alt="SnapFrame">
+  <h1>Snap<span>Frame</span></h1>
+ </div>
+ <div class="header-btns">
+  <button id="installBtn">📲 Install App</button>
+  <button id="newBtn">+ New</button>
+ </div>
 </header>
 
 <main id="preview">
  <div id="dropzone">
-  <div class="big">🖼️</div>
+  <div class="big">📸</div>
   <h2>Tap to pick a screenshot</h2>
   <p>or drag &amp; drop here<br>or press <b>Ctrl+V / ⌘V</b> to paste</p>
  </div>
@@ -68,21 +77,24 @@ input[type=text]{width:100%;padding:10px;background:#2a2a38;border:1px solid #33
 </main>
 
 <section id="controls">
- <div class="row"><label>Headline Text</label><input type="text" id="headline" placeholder="Add a catchy title..."></div>
  <div class="row"><label>Background</label><div class="swatches" id="swatches"></div></div>
+ <div class="row">
+  <label>Add Caption</label>
+  <input type="text" id="caption" class="text-input" placeholder="Type a title on top (e.g. New Feature!)...">
+ </div>
  <div class="row"><label>Frame</label>
   <div class="chips" id="frames">
    <div class="chip active" data-v="none">None</div>
-   <div class="chip" data-v="mac">macOS Light</div>
-   <div class="chip" data-v="dark">macOS Dark</div>
+   <div class="chip" data-v="mac">macOS Bar</div>
+   <div class="chip" data-v="phone">iPhone Black</div>
   </div>
  </div>
- <div class="row"><label>Size (Template)</label>
+ <div class="row"><label>Size</label>
   <div class="chips" id="ratios">
    <div class="chip active" data-v="auto">Auto</div>
    <div class="chip" data-v="1">1:1 Square</div>
-   <div class="chip" data-v="0.8">4:5 Instagram</div>
-   <div class="chip" data-v="1.7778">16:9 X/Twitter</div>
+   <div class="chip" data-v="0.8">4:5 Portrait</div>
+   <div class="chip" data-v="1.7778">16:9 Landscape</div>
    <div class="chip" data-v="0.5625">9:16 Story</div>
   </div>
  </div>
@@ -105,10 +117,28 @@ const GRADIENTS=[
  ['#0f0c29','#302b63'],['#ff6a00','#ee0979'],['#1e3c72','#2a5298'],['#f5f7fa','#c3cfe2'],
  ['#ffffff','#ffffff'],['#000000','#000000']
 ];
-const state={img:null,grad:0,pad:60,radius:20,shadow:40,ratio:'auto',frame:'none',text:''};
+const state={img:null,grad:0,pad:60,radius:20,shadow:40,ratio:'auto',frame:'none',caption:''};
 const $=id=>document.getElementById(id);
 const canvas=$('canvas'),ctx=canvas.getContext('2d');
 const dropzone=$('dropzone'),fileInput=$('fileInput');
+
+/* ---------- PWA Install Button Helper ---------- */
+let deferredPrompt;
+window.addEventListener('beforeinstallprompt', (e) => {
+  e.preventDefault();
+  deferredPrompt = e;
+  $('installBtn').style.display = 'block';
+});
+$('installBtn').addEventListener('click', async () => {
+  if (deferredPrompt) {
+    deferredPrompt.prompt();
+    const { outcome } = await deferredPrompt.userChoice;
+    if (outcome === 'accepted') {
+      $('installBtn').style.display = 'none';
+    }
+    deferredPrompt = null;
+  }
+});
 
 /* ---------- Load image ---------- */
 function loadFile(file){
@@ -119,7 +149,7 @@ function loadFile(file){
  img.src=url;
 }
 function showEditor(){dropzone.style.display='none';canvas.style.display='block';$('controls').style.display='block';$('newBtn').style.display='block';}
-function reset(){state.img=null;fileInput.value='';dropzone.style.display='block';canvas.style.display='none';$('controls').style.display='none';$('newBtn').style.display='none';}
+function reset(){state.img=null;fileInput.value='';$('caption').value='';state.caption='';dropzone.style.display='block';canvas.style.display='none';$('controls').style.display='none';$('newBtn').style.display='none';}
 
 dropzone.addEventListener('click',()=>fileInput.click());
 fileInput.addEventListener('change',e=>loadFile(e.target.files[0]));
@@ -129,6 +159,12 @@ $('newBtn').addEventListener('click',reset);
 document.addEventListener('drop',e=>loadFile(e.dataTransfer.files[0]));
 document.addEventListener('paste',e=>{
  for(const item of e.clipboardData.items){if(item.type.startsWith('image/')){loadFile(item.getAsFile());break;}}
+});
+
+/* ---------- Text Input Event ---------- */
+$('caption').addEventListener('input', e => {
+  state.caption = e.target.value;
+  render();
 });
 
 /* ---------- Controls ---------- */
@@ -149,7 +185,6 @@ chipGroup('frames','frame');chipGroup('ratios','ratio');
  const el=$(id);const up=()=>{state[id]=+el.value;$(id+'V').textContent=el.value;render();};
  el.addEventListener('input',up);up();
 });
-$('headline').addEventListener('input',e=>{state.text=e.target.value;render();});
 
 /* ---------- Drawing engine ---------- */
 function roundRect(c,x,y,w,h,r){
@@ -162,11 +197,24 @@ function render(){
  const f=Math.min(1,1800/Math.max(iw,ih));iw=Math.round(iw*f);ih=Math.round(ih*f);
  const k=Math.max(iw,ih)/1000;
  const pad=state.pad*k,radius=state.radius*k,blur=state.shadow*k;
- const barH=state.frame==='none'?0:Math.round(Math.max(28,iw*0.045));
- const cardW=iw,cardH=ih+barH;
- let outW=cardW+pad*2,outH=cardH+pad*2;
- if(state.ratio!=='auto'){const r=parseFloat(state.ratio);
-  if(outW/outH>r)outH=outW/r;else outW=outH*r;}
+ 
+ // Extra spacing if frame is iPhone
+ const borderW = state.frame==='phone' ? Math.round(iw*0.04) : 0;
+ const barH = state.frame==='mac' ? Math.round(Math.max(28,iw*0.045)) : 0;
+ 
+ const cardW = iw + (borderW * 2);
+ const cardH = ih + barH + (borderW * 2);
+ 
+ // Top offset for text caption
+ const textOffset = state.caption ? Math.round(110 * k) : 0;
+
+ let outW = cardW + pad*2;
+ let outH = cardH + pad*2 + textOffset;
+ 
+ if(state.ratio!=='auto'){
+  const r=parseFloat(state.ratio);
+  if(outW/outH>r)outH=outW/r;else outW=outH*r;
+ }
  canvas.width=Math.round(outW);canvas.height=Math.round(outH);
 
  // background
@@ -174,29 +222,63 @@ function render(){
  const grad=ctx.createLinearGradient(0,0,outW,outH);grad.addColorStop(0,g[0]);grad.addColorStop(1,g[1]);
  ctx.fillStyle=grad;ctx.fillRect(0,0,outW,outH);
 
- const x=(outW-cardW)/2,y=(outH-cardH)/2;
+ // Draw Caption Text
+ if(state.caption){
+  ctx.fillStyle = '#ffffff';
+  ctx.font = `bold ${Math.round(42 * k)}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`;
+  ctx.textAlign = 'center';
+  ctx.fillText(state.caption, outW / 2, pad + Math.round(45 * k));
+ }
+
+ const x = (outW-cardW)/2;
+ const y = ((outH - textOffset - cardH)/2) + textOffset;
 
  // shadow
  if(blur>0){ctx.save();ctx.shadowColor='rgba(0,0,0,.45)';ctx.shadowBlur=blur;ctx.shadowOffsetY=blur*.4;
-  ctx.fillStyle='#000';roundRect(ctx,x,y,cardW,cardH,radius);ctx.fill();ctx.restore();}
+  ctx.fillStyle='#000';roundRect(ctx,x,y,cardW,cardH,state.frame==='phone'?radius*1.5:radius);ctx.fill();ctx.restore();}
 
- // card
- ctx.save();roundRect(ctx,x,y,cardW,cardH,radius);ctx.clip();
+ // draw mockup card
+ ctx.save();
+ if(state.frame==='phone'){
+  roundRect(ctx,x,y,cardW,cardH,radius*1.5);ctx.clip();
+  ctx.fillStyle='#0c0c0e';ctx.fillRect(x,y,cardW,cardH);
+  
+  // draw dynamic island
+  const diW = cardW * 0.28, diH = cardH * 0.03, diX = x + (cardW-diW)/2, diY = y + (cardH*0.02);
+  ctx.fillStyle='#000';roundRect(ctx,diX,diY,diW,diH,diH/2);ctx.fill();
+ } else {
+  roundRect(ctx,x,y,cardW,cardH,radius);ctx.clip();
+ }
+ 
  if(barH){
-  ctx.fillStyle=state.frame==='dark'?'#2b2b30':'#ececf1';ctx.fillRect(x,y,cardW,barH);
+  ctx.fillStyle='#ececf1';ctx.fillRect(x,y,cardW,barH);
   const r=barH*.17,cy=y+barH/2;
   ['#ff5f57','#febc2e','#28c840'].forEach((c,i)=>{ctx.fillStyle=c;ctx.beginPath();ctx.arc(x+barH*.55+i*r*2.9,cy,r,0,Math.PI*2);ctx.fill();});
  }
- ctx.drawImage(img,x,y+barH,iw,ih);
- ctx.restore();
-
- // Text overlay
- if(state.text){
-  ctx.save();
-  ctx.fillStyle='#ffffff';
-  ctx.font='bold '+Math.round(outW*0.06)+'px -apple-system, sans-serif';
-  ctx.textAlign='center';
-  ctx.textBaseline='bottom';
-  ctx.shadowColor='rgba(0,0,0,0.5)';
-  ctx.shadowBlur=10;
  
+ ctx.drawImage(img,x+borderW,y+barH+borderW,iw,ih);
+ ctx.restore();
+}
+
+/* ---------- Export ---------- */
+let tt;function toast(m){const t=$('toast');t.textContent=m;t.classList.add('show');clearTimeout(tt);tt=setTimeout(()=>t.classList.remove('show'),1800);}
+const getBlob=()=>new Promise(r=>canvas.toBlob(r,'image/png'));
+async function download(){
+ const b=await getBlob();const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='snapframe.png';
+ document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),2000);toast('Saved ✓');
+}
+async function share(){
+ const b=await getBlob();const file=new File([b],'snapframe.png',{type:'image/png'});
+ if(navigator.canShare&&navigator.canShare({files:[file]})){try{await navigator.share({files:[file],title:'SnapFrame'});}catch(e){}}
+ else download();
+}
+async function copy(){
+ try{const b=await getBlob();await navigator.clipboard.write([new ClipboardItem({'image/png':b})]);toast('Copied ✓');}
+ catch(e){toast('Copy not supported here – use Download');}
+}
+$('dlBtn').onclick=download;$('shareBtn').onclick=share;$('copyBtn').onclick=copy;
+
+if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});
+</script>
+</body>
+</html>
