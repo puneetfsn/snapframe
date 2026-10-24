@@ -658,13 +658,15 @@ $('shareBtn').onclick=async()=>{
 $('allBatch').onclick=async()=>{
  if(!state.batch.length)return notify('Add batch images first');
  const original=state.img,index=state.batchIndex,covers=state.covers;
- notify('Downloading '+state.batch.length+' files...');
+ notify('Downloading '+state.batch.length+' files… check your browser\'s download prompt');
  for(let i=0;i<state.batch.length;i++){
   state.img=state.batch[i];state.covers=[];render();
   await downloadBlob(await blobOf(canvas),'snapframe-'+(i+1)+'.png');
-  await new Promise(resolve=>setTimeout(resolve,350));
+  notify('Saved '+(i+1)+' of '+state.batch.length);
+  await new Promise(resolve=>setTimeout(resolve,1000));
  }
  state.img=original;state.batchIndex=index;state.covers=covers;render();
+ notify('All '+state.batch.length+' images downloaded ✓');
 };
 
 // Voluntary UPI support
